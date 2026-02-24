@@ -1,0 +1,15 @@
+version: 2.1
+
+orbs:
+  pre-commit: oandacorp/pre-commit@1
+
+workflows:
+  build:
+    jobs:
+      - pre-commit/run:
+          name: pre-commit-run
+          before-check-steps:
+            - run: apk add perl
+          context:
+            - gcr
+          all-files: false
