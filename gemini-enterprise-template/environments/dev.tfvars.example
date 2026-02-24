@@ -1,0 +1,74 @@
+# =============================================================================
+# Development Environment Configuration
+# =============================================================================
+# Usage: terraform plan -var-file="environments/dev.tfvars"
+# =============================================================================
+
+project_id = "your-dev-project-id"
+
+# -----------------------------------------------------------------------------
+# Gemini Enterprise
+# -----------------------------------------------------------------------------
+
+discovery_engine_location  = "global"
+search_engine_id           = "gemini-enterprise-dev"
+search_engine_display_name = "Gemini Enterprise (Dev)"
+
+# License — use free trial for dev
+enable_license_config = false
+free_trial            = true
+
+# -----------------------------------------------------------------------------
+# Connectors — enable only what you need for development
+# -----------------------------------------------------------------------------
+
+third_party_connectors = {
+  jira = {
+    enabled                 = true
+    data_source             = "jira"
+    collection_id           = "dev-jira-collection"
+    collection_display_name = "Dev Jira"
+
+    params = {
+      instance_uri = "https://your-org.atlassian.net"
+      instance_id  = "your-cloud-id"
+    }
+
+    secrets = {
+      client_id     = "DEV_JIRA_CLIENT_ID"
+      client_secret = "DEV_JIRA_CLIENT_SECRET"
+      refresh_token = "DEV_JIRA_REFRESH_TOKEN"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "21600s"
+
+    entities = [
+      { entity_name = "issue" },
+      { entity_name = "project" }
+    ]
+
+    connector_modes = ["FEDERATED"]
+    sync_mode       = "PERIODIC"
+  }
+}
+
+workspace_connectors = {
+  gmail = {
+    enabled                 = true
+    data_source             = "google_mail"
+    collection_id           = "dev-mail-collection"
+    collection_display_name = "Dev Gmail"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_mail" }
+    connector_modes         = ["FEDERATED"]
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Widget
+# -----------------------------------------------------------------------------
+
+enable_widget_config       = true
+widget_interaction_type    = "SEARCH_WITH_ANSWER"
+widget_allow_public_access = false

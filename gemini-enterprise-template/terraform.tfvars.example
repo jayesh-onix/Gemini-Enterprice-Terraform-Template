@@ -1,0 +1,268 @@
+# =============================================================================
+# Gemini Enterprise - Full Configuration Example
+# =============================================================================
+# Copy this file to terraform.tfvars and customize for your project.
+#
+# QUICK START:
+#   1. Set project_id to your GCP project
+#   2. Enable the connectors you need (set enabled = true)
+#   3. Configure secrets in Secret Manager before applying
+#   4. Run: terraform init && terraform plan && terraform apply
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Required: GCP Project
+# -----------------------------------------------------------------------------
+
+project_id = "your-gcp-project-id"
+
+# -----------------------------------------------------------------------------
+# Gemini Enterprise Configuration
+# -----------------------------------------------------------------------------
+
+discovery_engine_location  = "global" # Options: global, us, eu
+search_engine_id           = "gemini-enterprise-app"
+search_engine_display_name = "Gemini Enterprise Search"
+app_type                   = "APP_TYPE_INTRANET"
+search_tier                = "SEARCH_TIER_ENTERPRISE"
+search_add_ons             = ["SEARCH_ADD_ON_LLM"]
+
+# -----------------------------------------------------------------------------
+# License Configuration (optional — enable when ready)
+# -----------------------------------------------------------------------------
+
+enable_license_config = false
+license_count         = 25
+free_trial            = true
+subscription_tier     = "SUBSCRIPTION_TIER_ENTERPRISE"
+subscription_term     = "SUBSCRIPTION_TERM_ONE_MONTH"
+start_date            = { year = 2025, month = 1, day = 1 }
+end_date              = { year = 2025, month = 12, day = 31 }
+
+# =============================================================================
+# THIRD-PARTY CONNECTORS (OAuth-based)
+# =============================================================================
+# Each connector needs:
+#   - data_source:  The connector type identifier
+#   - params:       Non-secret connection parameters
+#   - secrets:      Secret Manager secret IDs for OAuth credentials
+#   - entities:     What data to sync
+#
+# PREREQUISITES:
+#   Create the required secrets in GCP Secret Manager BEFORE applying.
+#   Secret names are fully configurable — use your team's naming convention.
+# =============================================================================
+
+third_party_connectors = {
+
+  # ---------------------------------------------------------------------------
+  # Jira Cloud Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. Create OAuth 2.0 app in Atlassian Developer Console
+  #   2. Store credentials in Secret Manager:
+  #      - YOUR_PROJECT_JIRA_CLIENT_ID
+  #      - YOUR_PROJECT_JIRA_CLIENT_SECRET
+  #      - YOUR_PROJECT_JIRA_REFRESH_TOKEN
+  #   3. Get your Cloud ID from: https://YOUR_INSTANCE.atlassian.net/_edge/tenant_info
+  # ---------------------------------------------------------------------------
+  jira = {
+    enabled             = false
+    data_source         = "jira"
+    collection_id       = "jira-collection"
+    collection_display_name = "Jira"
+
+    params = {
+      instance_uri = "https://your-org.atlassian.net"
+      instance_id  = "your-cloud-id-uuid"
+    }
+
+    secrets = {
+      client_id     = "YOUR_PROJECT_JIRA_CLIENT_ID"
+      client_secret = "YOUR_PROJECT_JIRA_CLIENT_SECRET"
+      refresh_token = "YOUR_PROJECT_JIRA_REFRESH_TOKEN"
+    }
+
+    refresh_interval             = "86400s"  # Full refresh: daily
+    incremental_refresh_interval = "21600s"  # Incremental: every 6 hours
+
+    # Valid entities: project, attachment, comment, issue, bug, epic, story, task, worklog, board
+    entities = [
+      { entity_name = "issue" },
+      { entity_name = "project" },
+      { entity_name = "comment" },
+      { entity_name = "attachment" },
+      { entity_name = "worklog" }
+    ]
+
+    connector_modes = ["FEDERATED"] # Options: DATA_INGESTION, FEDERATED
+    sync_mode       = "PERIODIC"    # Options: PERIODIC, MANUAL
+  }
+
+  # ---------------------------------------------------------------------------
+  # Confluence Cloud Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. Create OAuth 2.0 app in Atlassian Developer Console
+  #   2. Store credentials in Secret Manager:
+  #      - YOUR_PROJECT_CONFLUENCE_CLIENT_ID
+  #      - YOUR_PROJECT_CONFLUENCE_CLIENT_SECRET
+  #      - YOUR_PROJECT_CONFLUENCE_REFRESH_TOKEN
+  # ---------------------------------------------------------------------------
+  confluence = {
+    enabled                 = false
+    data_source             = "confluence"
+    collection_id           = "confluence-collection"
+    collection_display_name = "Confluence"
+
+    params = {
+      instance_uri = "https://your-org.atlassian.net"
+      instance_id  = "your-cloud-id-uuid"
+    }
+
+    secrets = {
+      client_id     = "YOUR_PROJECT_CONFLUENCE_CLIENT_ID"
+      client_secret = "YOUR_PROJECT_CONFLUENCE_CLIENT_SECRET"
+      refresh_token = "YOUR_PROJECT_CONFLUENCE_REFRESH_TOKEN"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "21600s"
+
+    # Valid entities: space, page, blog, attachment, comment, whiteboard
+    entities = [
+      { entity_name = "page" },
+      { entity_name = "space" },
+      { entity_name = "blog" },
+      { entity_name = "attachment" },
+      { entity_name = "comment" }
+    ]
+
+    connector_modes = ["FEDERATED"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Salesforce Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. Create Connected App in Salesforce with OAuth 2.0
+  #   2. Store credentials in Secret Manager:
+  #      - YOUR_PROJECT_SALESFORCE_CLIENT_ID
+  #      - YOUR_PROJECT_SALESFORCE_CLIENT_SECRET
+  # ---------------------------------------------------------------------------
+  salesforce = {
+    enabled                 = false
+    data_source             = "salesforce"
+    collection_id           = "salesforce-collection"
+    collection_display_name = "Salesforce"
+
+    params = {
+      auth_type    = "OAUTH_TWO_LEGGED"
+      instance_uri = "https://your-org.my.salesforce.com"
+    }
+
+    secrets = {
+      client_id     = "YOUR_PROJECT_SALESFORCE_CLIENT_ID"
+      client_secret = "YOUR_PROJECT_SALESFORCE_CLIENT_SECRET"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "10800s" # Every 3 hours
+
+    # Valid entities: account, case, contact, contentdocument, lead, opportunity, task
+    entities = [
+      { entity_name = "lead" },
+      { entity_name = "opportunity" },
+      { entity_name = "account" },
+      { entity_name = "contact" },
+      { entity_name = "case" },
+      { entity_name = "task" },
+      { entity_name = "contentdocument" }
+    ]
+
+    connector_modes   = ["DATA_INGESTION"]
+    sync_mode         = "PERIODIC"
+    auto_run_disabled = false
+  }
+}
+
+# =============================================================================
+# GOOGLE WORKSPACE CONNECTORS (Native — no OAuth secrets)
+# =============================================================================
+# Google Workspace connectors authenticate via the project's identity.
+# No Secret Manager setup is required.
+# =============================================================================
+
+workspace_connectors = {
+
+  # ---------------------------------------------------------------------------
+  # Gmail Connector
+  # ---------------------------------------------------------------------------
+  gmail = {
+    enabled                 = false
+    data_source             = "google_mail"
+    collection_id           = "mail-collection"
+    collection_display_name = "Gmail"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_mail" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  # ---------------------------------------------------------------------------
+  # Google Calendar Connector
+  # ---------------------------------------------------------------------------
+  calendar = {
+    enabled                 = false
+    data_source             = "google_calendar"
+    collection_id           = "calendar-collection"
+    collection_display_name = "Google Calendar"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_calendar" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  # ---------------------------------------------------------------------------
+  # Google Drive Connector
+  # ---------------------------------------------------------------------------
+  drive = {
+    enabled                 = false
+    data_source             = "google_drive"
+    collection_id           = "drive-collection"
+    collection_display_name = "Google Drive"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_drive" }
+    connector_modes         = ["FEDERATED"]
+  }
+}
+
+# =============================================================================
+# WIDGET CONFIGURATION
+# =============================================================================
+
+enable_widget_config           = true
+widget_config_id               = "default_search_widget_config"
+widget_enable_web_app          = true
+widget_allow_public_access     = false
+widget_allowlisted_domains     = []
+widget_interaction_type        = "SEARCH_WITH_ANSWER" # Options: SEARCH_ONLY, SEARCH_WITH_ANSWER, SEARCH_WITH_FOLLOW_UPS
+widget_enable_autocomplete     = true
+widget_enable_quality_feedback = true
+widget_enable_safe_search      = true
+
+# Custom branding logo (optional — must be a publicly accessible URL)
+widget_logo_url = null
+
+# Homepage shortcuts (optional)
+widget_homepage_shortcuts = []
+# Example:
+# widget_homepage_shortcuts = [
+#   {
+#     title           = "Documentation"
+#     destination_uri = "https://docs.example.com"
+#   },
+#   {
+#     title           = "Support Portal"
+#     destination_uri = "https://support.example.com"
+#   }
+# ]

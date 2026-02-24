@@ -1,9 +1,11 @@
+/*
 terraform {
   backend "gcs" {
     bucket = "oanda-dev-tfstate"
     prefix = "oanda-dev-agentspace-onix"
   }
 }
+*/
 # -----------------------------------------------------------------------------
 # Gemini Enterprise Module
 # -----------------------------------------------------------------------------
@@ -126,16 +128,16 @@ module "adk_agent_bucket" {
   project_id               = var.project_id
   version                  = "~> 12.1"
   location                 = "US"
-  name                     = "oanda-dev-adk-agent-ge"
+  name                     = "gemini-enterprise-terraform-test-bucket-jayesh"
   storage_class            = "STANDARD"
   public_access_prevention = "enforced"
 
-  iam_members = [
-    {
-      role   = "roles/storage.objectUser"
-      member = "serviceAccount:${google_service_account.oanda_dev_agent_sa.email}"
-    }
-  ]
+  # iam_members = [
+  #   {
+  #     role   = "roles/storage.objectUser"
+  #     member = "serviceAccount:${google_service_account.oanda_dev_agent_sa.email}"
+  #   }
+  # ]
 
   versioning         = false
   bucket_policy_only = true
@@ -147,6 +149,7 @@ module "adk_agent_bucket" {
   }
 }
 
+/*
 resource "google_project_iam_member" "agent_project_roles" {
   for_each = toset([
     "roles/discoveryengine.editor",
@@ -172,7 +175,9 @@ resource "google_service_account" "oanda_dev_agent_sa" {
 resource "google_service_account_key" "oanda_dev_agent_sa_key" {
   service_account_id = google_service_account.oanda_dev_agent_sa.name
 }
+*/
 
+/*
 resource "google_secret_manager_secret" "oanda_dev_agent_sa_secret" {
   project   = var.project_id
   secret_id = "OANDA_DEV_AGENT_SERVICE_ACCOUNT"
@@ -189,10 +194,12 @@ resource "google_secret_manager_secret_version" "oanda_dev_agent_sa_secret_versi
   secret      = google_secret_manager_secret.oanda_dev_agent_sa_secret.id
   secret_data = base64decode(google_service_account_key.oanda_dev_agent_sa_key.private_key)
 }
+*/
 
 # -----------------------------------------------------------------------------
 # IAM Bindings for Gemini Enterprise Users and Admins
 # -----------------------------------------------------------------------------
+/*
 resource "google_project_iam_member" "ge_users" {
   project = var.project_id
   role    = "roles/discoveryengine.user"
@@ -216,10 +223,12 @@ resource "google_project_iam_member" "ge_users_service_usage" {
   role    = "roles/serviceusage.serviceUsageConsumer"
   member  = "group:gcp-agentspace-users@oanda.com"
 }
+*/
 
 # -----------------------------------------------------------------------------
 # API Agent Service Account
 # -----------------------------------------------------------------------------
+/*
 resource "google_service_account" "oanda_api_agent" {
   project      = var.project_id
   account_id   = "oanda-api-agent"
@@ -262,10 +271,12 @@ resource "google_project_iam_member" "api_agent_aiplatform_user" {
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_service_account.oanda_api_agent.email}"
 }
+*/
 
 # -----------------------------------------------------------------------------
 # BigQuery Agent Service Account
 # -----------------------------------------------------------------------------
+/*
 resource "google_service_account" "oanda_bq_agent" {
   project      = var.project_id
   account_id   = "oanda-bq-agent"
@@ -296,3 +307,4 @@ resource "google_project_iam_member" "bq_agent_vertex_ai_user" {
   role    = "roles/aiplatform.user"
   member  = "serviceAccount:${google_service_account.oanda_bq_agent.email}"
 }
+*/

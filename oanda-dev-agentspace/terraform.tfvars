@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Required Variables
 # -----------------------------------------------------------------------------
-project_id = "oanda-dev-agentspace"
+project_id = "search-ahmed"
 
 # -----------------------------------------------------------------------------
 # Gemini Enterprise Configuration
@@ -19,7 +19,7 @@ collection_display_name = "Oanda Jira"
 # -----------------------------------------------------------------------------
 # Jira Cloud Data Connector Configuration
 # -----------------------------------------------------------------------------
-enable_jira_connector = true
+enable_jira_connector = false
 jira_instance_id      = "d2899e15-212f-4f61-a694-711d91deedd1" # The Cloud ID you will get from https://YOUR_INSTANCE.atlassian.net/_edge/tenant_info
 jira_instance_uri     = "https://oandacorp.atlassian.net"
 
@@ -68,7 +68,7 @@ jira_sync_mode         = "PERIODIC"    # Options: PERIODIC, MANUAL
 # -----------------------------------------------------------------------------
 # Confluence Cloud Data Connector Configuration
 # -----------------------------------------------------------------------------
-enable_confluence_connector        = true
+enable_confluence_connector        = false
 confluence_instance_id             = "d2899e15-212f-4f61-a694-711d91deedd1"
 confluence_instance_uri            = "https://oandacorp.atlassian.net"
 confluence_collection_id           = "oanda-confluence-collection"
@@ -216,6 +216,4 @@ widget_homepage_shortcuts = []
 #   }
 # ]
 
-bq_agent_datasets = [
-  "oanda-dev-de.onix_bronze"
-]
+bq_agent_datasets = []

@@ -1,0 +1,184 @@
+# =============================================================================
+# Production Environment Configuration
+# =============================================================================
+# Usage: terraform plan -var-file="environments/prod.tfvars"
+# =============================================================================
+
+project_id = "your-prod-project-id"
+
+# -----------------------------------------------------------------------------
+# Gemini Enterprise
+# -----------------------------------------------------------------------------
+
+discovery_engine_location  = "us"
+search_engine_id           = "gemini-enterprise-prod"
+search_engine_display_name = "Gemini Enterprise (Production)"
+
+# License — production with paid subscription
+enable_license_config = true
+license_count         = 100
+free_trial            = false
+subscription_tier     = "SUBSCRIPTION_TIER_ENTERPRISE"
+subscription_term     = "SUBSCRIPTION_TERM_ONE_YEAR"
+start_date            = { year = 2025, month = 1, day = 1 }
+end_date              = { year = 2026, month = 1, day = 1 }
+
+# -----------------------------------------------------------------------------
+# Connectors — all connectors enabled for production
+# -----------------------------------------------------------------------------
+
+third_party_connectors = {
+  jira = {
+    enabled                 = true
+    data_source             = "jira"
+    collection_id           = "prod-jira-collection"
+    collection_display_name = "Production Jira"
+
+    params = {
+      instance_uri = "https://your-org.atlassian.net"
+      instance_id  = "your-cloud-id"
+    }
+
+    secrets = {
+      client_id     = "PROD_JIRA_CLIENT_ID"
+      client_secret = "PROD_JIRA_CLIENT_SECRET"
+      refresh_token = "PROD_JIRA_REFRESH_TOKEN"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "21600s"
+
+    entities = [
+      { entity_name = "issue" },
+      { entity_name = "project" },
+      { entity_name = "comment" },
+      { entity_name = "attachment" },
+      { entity_name = "worklog" }
+    ]
+
+    connector_modes = ["FEDERATED"]
+    sync_mode       = "PERIODIC"
+  }
+
+  confluence = {
+    enabled                 = true
+    data_source             = "confluence"
+    collection_id           = "prod-confluence-collection"
+    collection_display_name = "Production Confluence"
+
+    params = {
+      instance_uri = "https://your-org.atlassian.net"
+      instance_id  = "your-cloud-id"
+    }
+
+    secrets = {
+      client_id     = "PROD_CONFLUENCE_CLIENT_ID"
+      client_secret = "PROD_CONFLUENCE_CLIENT_SECRET"
+      refresh_token = "PROD_CONFLUENCE_REFRESH_TOKEN"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "21600s"
+
+    entities = [
+      { entity_name = "page" },
+      { entity_name = "space" },
+      { entity_name = "blog" },
+      { entity_name = "attachment" },
+      { entity_name = "comment" },
+      { entity_name = "whiteboard" }
+    ]
+
+    connector_modes = ["FEDERATED"]
+    sync_mode       = "PERIODIC"
+  }
+
+  salesforce = {
+    enabled                 = true
+    data_source             = "salesforce"
+    collection_id           = "prod-salesforce-collection"
+    collection_display_name = "Production Salesforce"
+
+    params = {
+      auth_type    = "OAUTH_TWO_LEGGED"
+      instance_uri = "https://your-org.my.salesforce.com"
+    }
+
+    secrets = {
+      client_id     = "PROD_SALESFORCE_CLIENT_ID"
+      client_secret = "PROD_SALESFORCE_CLIENT_SECRET"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "10800s"
+
+    entities = [
+      { entity_name = "lead" },
+      { entity_name = "opportunity" },
+      { entity_name = "account" },
+      { entity_name = "contact" },
+      { entity_name = "case" },
+      { entity_name = "task" },
+      { entity_name = "contentdocument" }
+    ]
+
+    connector_modes   = ["DATA_INGESTION"]
+    sync_mode         = "PERIODIC"
+    auto_run_disabled = false
+  }
+}
+
+workspace_connectors = {
+  gmail = {
+    enabled                 = true
+    data_source             = "google_mail"
+    collection_id           = "prod-mail-collection"
+    collection_display_name = "Production Gmail"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_mail" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  calendar = {
+    enabled                 = true
+    data_source             = "google_calendar"
+    collection_id           = "prod-calendar-collection"
+    collection_display_name = "Production Calendar"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_calendar" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  drive = {
+    enabled                 = true
+    data_source             = "google_drive"
+    collection_id           = "prod-drive-collection"
+    collection_display_name = "Production Drive"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_drive" }
+    connector_modes         = ["FEDERATED"]
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Widget
+# -----------------------------------------------------------------------------
+
+enable_widget_config           = true
+widget_interaction_type        = "SEARCH_WITH_FOLLOW_UPS"
+widget_enable_autocomplete     = true
+widget_enable_quality_feedback = true
+widget_enable_safe_search      = true
+widget_allow_public_access     = false
+widget_logo_url                = "https://your-org.com/assets/logo.svg"
+
+widget_homepage_shortcuts = [
+  {
+    title           = "Documentation"
+    destination_uri = "https://docs.your-org.com"
+  },
+  {
+    title           = "Support"
+    destination_uri = "https://support.your-org.com"
+  }
+]

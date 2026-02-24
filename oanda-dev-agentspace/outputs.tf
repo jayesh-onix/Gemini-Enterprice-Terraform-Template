@@ -52,6 +52,7 @@ output "engine_full_id" {
 # -----------------------------------------------------------------------------
 # BigQuery Agent Service Account
 # -----------------------------------------------------------------------------
+/*
 output "bq_agent_service_account_email" {
   description = "The email address of the BigQuery agent service account"
   value       = google_service_account.oanda_bq_agent.email
@@ -66,11 +67,12 @@ output "bq_agent_datasets" {
   description = "List of BigQuery datasets the agent service account has access to"
   value       = var.bq_agent_datasets
 }
+*/
 
 # -----------------------------------------------------------------------------
 # API Agent Service Account
 # -----------------------------------------------------------------------------
-
+/*
 output "api_agent_service_account_name" {
   description = "The fully-qualified name of the API agent service account"
   value       = google_service_account.oanda_api_agent.name
@@ -80,3 +82,4 @@ output "api_agent_service_account_email" {
   description = "Email of the API agent service account"
   value       = google_service_account.oanda_api_agent.email
 }
+*/
