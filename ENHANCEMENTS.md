@@ -154,13 +154,12 @@ The entire connector configuration moved from **code** (individual `.tf` files a
 
 | Before (Oanda) | After (Generic Template) |
 |----------------|--------------------------|
-| 6 connector `.tf` files | 1 `connectors.tf` with `for_each` |
-| 667-line `variables.tf` | 356-line `variables.tf` |
-| 72 connector-specific variables | 2 structured map variables |
+| 6 connector `.tf` files | 1 `connectors.tf` + 1 `data_stores.tf` with `for_each` |
+| 667-line `variables.tf` | ~460-line `variables.tf` (with 14 connector types) |
+| 72 connector-specific variables | 4 structured map variables + 1 feature map |
 | Hardcoded ONIX secret names | Fully configurable secret names |
 | 1 instance per connector type | Unlimited instances via map keys |
-| Extending requires code changes | Extending via config only |
-
+| 6 connectors only | 14 connector types + data stores + engine features |
 ---
 
 ## Enhancement Details
@@ -372,9 +371,29 @@ third_party_connectors = {
 }
 
 workspace_connectors = {
-  gmail    = { enabled = true, data_source = "google_mail",     ... }
-  calendar = { enabled = true, data_source = "google_calendar", ... }
-  drive    = { enabled = true, data_source = "google_drive",    ... }
+  gmail    = { enabled = true, data_source = "google_mail",           ... }
+  calendar = { enabled = true, data_source = "google_calendar",       ... }
+  drive    = { enabled = true, data_source = "google_drive",          ... }
+  sites    = { enabled = true, data_source = "google_sites",          ... }
+  groups   = { enabled = true, data_source = "google_groups",         ... }
+  people   = { enabled = true, data_source = "google_cloud_identity", ... }
+}
+
+cloud_connectors = {
+  bigquery  = { enabled = true, data_source = "bigquery",  ... }
+  gcs       = { enabled = true, data_source = "gcs",       ... }
+  cloud_sql = { enabled = true, data_source = "cloud_sql", ... }
+  spanner   = { enabled = true, data_source = "spanner",   ... }
+  alloydb   = { enabled = true, data_source = "alloydb",   ... }
+}
+
+cloud_data_stores = {
+  announcements = { data_store_id = "announcements-store", ... }
+}
+
+engine_features = {
+  "notebook-lm"             = "FEATURE_STATE_ON"
+  "people-search-org-chart" = "FEATURE_STATE_ON"
 }
 ```
 
@@ -386,12 +405,13 @@ No Terraform source files need to be edited. Enabling or disabling a connector i
 
 | Metric | Oanda Template | Generic Template | Improvement |
 |--------|---------------|-----------------|-------------|
-| Connector `.tf` files | 6 | 1 | 83% reduction |
-| `variables.tf` lines | 667 | 356 | 47% reduction |
-| Connector variables | ~72 | 2 (maps) | 97% reduction |
+| Connector `.tf` files | 6 | 2 (`connectors.tf` + `data_stores.tf`) | 67% reduction |
+| `variables.tf` lines | 667 | ~460 (with 14 connector types) | 31% reduction |
+| Connector variables | ~72 | 4 (maps) + 1 (features) | 93% reduction |
 | `data` blocks for secrets | 3 separate | 1 unified | 67% reduction |
 | IAM binding resources | 3 separate | 1 unified | 67% reduction |
-| Connector resources | 6 separate | 2 unified | 67% reduction |
+| Connector resources | 6 separate | 3 unified | 50% reduction |
+| Supported connector types | 6 | 14 + data stores + features | 133% increase |
 
 The `for_each` pattern eliminates all repetition. Adding a new entity to a connector means adding one line to the `entities` list — not writing a new resource block.
 
@@ -442,6 +462,16 @@ The new template does **not drop any functionality** from the Oanda reference. T
 | Incremental Refresh | ✅ | ✅ |
 | Custom Entities per Connector | ✅ | ✅ |
 | Connector Modes (FEDERATED / DATA_INGESTION) | ✅ | ✅ |
+| Google Sites Connector | ❌ | ✅ (new) |
+| Google Groups Connector | ❌ | ✅ (new) |
+| People (Cloud Identity) Connector | ❌ | ✅ (new) |
+| BigQuery Connector | ❌ | ✅ (new) |
+| Cloud Storage (GCS) Connector | ❌ | ✅ (new) |
+| Cloud SQL Connector | ❌ | ✅ (new) |
+| Spanner Connector | ❌ | ✅ (new) |
+| AlloyDB Connector | ❌ | ✅ (new) |
+| Standalone Data Stores (Announcements) | ❌ | ✅ (new) |
+| Engine Features (NotebookLM, People Search) | ❌ | ✅ (new) |
 | Widget Configuration | ❌ | ✅ (new) |
 | Multi-environment Support (`environments/`) | ❌ | ✅ (new) |
 | Configurable Secret Names | ❌ | ✅ (new) |
@@ -473,10 +503,11 @@ oanda-dev-agentspace/modules/gemini-enterprise/
 
 ```
 gemini-enterprise-template/modules/gemini-enterprise/
-├── main.tf          # License + Search Engine + Widget only
-├── connectors.tf    # ALL connectors (third-party + workspace) via for_each
+├── main.tf          # License + Search Engine + Widget + Engine Features
+├── connectors.tf    # ALL connectors (third-party + workspace + cloud) via for_each
+├── data_stores.tf   # Standalone cloud data stores (Announcements, custom)
 ├── locals.tf        # All computed values, secret flattening, data store IDs
-├── variables.tf     # 356 lines — two structured map variables for all connectors
+├── variables.tf     # ~460 lines — four structured map variables + engine features
 ├── outputs.tf
 └── versions.tf
 ```

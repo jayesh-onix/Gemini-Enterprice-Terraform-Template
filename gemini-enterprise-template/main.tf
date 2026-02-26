@@ -15,6 +15,9 @@ module "gemini_enterprise" {
   engine_id  = var.search_engine_id
   location   = var.discovery_engine_location
 
+  # API auto-enablement
+  enable_discovery_engine_api = var.enable_discovery_engine_api
+
   # Search engine settings
   engine_display_name = var.search_engine_display_name
   app_type            = var.app_type
@@ -37,6 +40,13 @@ module "gemini_enterprise" {
   # -------------------------------------------------------------------------
   third_party_connectors = var.third_party_connectors
   workspace_connectors   = var.workspace_connectors
+  cloud_connectors       = var.cloud_connectors
+  cloud_data_stores      = var.cloud_data_stores
+
+  # -------------------------------------------------------------------------
+  # Engine Features (NotebookLM, People Search, etc.)
+  # -------------------------------------------------------------------------
+  engine_features = var.engine_features
 
   # -------------------------------------------------------------------------
   # Widget Configuration

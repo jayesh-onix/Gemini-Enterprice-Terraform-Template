@@ -35,6 +35,8 @@ resource "google_discovery_engine_license_config" "main" {
   }
 
   subscription_term = var.subscription_term
+
+  depends_on = [google_project_service.discoveryengine]
 }
 
 # -----------------------------------------------------------------------------
@@ -59,9 +61,14 @@ resource "google_discovery_engine_search_engine" "main" {
     search_add_ons = var.search_add_ons
   }
 
+  # Engine-level feature flags (NotebookLM, People Search, etc.)
+  features = length(var.engine_features) > 0 ? var.engine_features : null
+
   depends_on = [
     google_discovery_engine_data_connector.third_party,
     google_discovery_engine_data_connector.workspace,
+    google_discovery_engine_data_connector.cloud,
+    google_discovery_engine_data_store.cloud,
     google_discovery_engine_license_config.main,
   ]
 }

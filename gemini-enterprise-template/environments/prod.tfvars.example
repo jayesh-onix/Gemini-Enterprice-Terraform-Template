@@ -1,33 +1,64 @@
 # =============================================================================
 # Production Environment Configuration
 # =============================================================================
-# Usage: terraform plan -var-file="environments/prod.tfvars"
+# Usage:
+#   cp environments/prod.tfvars.example environments/prod.tfvars
+#   terraform plan  -var-file="environments/prod.tfvars"
+#   terraform apply -var-file="environments/prod.tfvars"
+#
+# This file shows a full production deployment:
+#   - Paid annual license with 100 seats
+#   - All third-party connectors (Jira, Confluence, Salesforce)
+#   - All workspace connectors (Gmail, Calendar, Drive, Sites, Groups, People)
+#   - BigQuery cloud connector enabled
+#   - Announcements data store
+#   - NotebookLM + People Search engine features
+#   - Full widget with branding, shortcuts, and follow-up search
+#
+# See terraform.tfvars.example for the FULL reference with all connectors.
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# Required: GCP Project
+# -----------------------------------------------------------------------------
 
 project_id = "your-prod-project-id"
 
 # -----------------------------------------------------------------------------
-# Gemini Enterprise
+# Gemini Enterprise Configuration
 # -----------------------------------------------------------------------------
 
-discovery_engine_location  = "us"
+discovery_engine_location  = "us" # Prod: use regional (us/eu) for data residency
 search_engine_id           = "gemini-enterprise-prod"
 search_engine_display_name = "Gemini Enterprise (Production)"
+app_type                   = "APP_TYPE_INTRANET"
+search_tier                = "SEARCH_TIER_ENTERPRISE"
+search_add_ons             = ["SEARCH_ADD_ON_LLM"]
 
-# License — production with paid subscription
+# -----------------------------------------------------------------------------
+# License — paid annual subscription for production
+# -----------------------------------------------------------------------------
+
 enable_license_config = true
 license_count         = 100
 free_trial            = false
 subscription_tier     = "SUBSCRIPTION_TIER_ENTERPRISE"
 subscription_term     = "SUBSCRIPTION_TERM_ONE_YEAR"
-start_date            = { year = 2025, month = 1, day = 1 }
-end_date              = { year = 2026, month = 1, day = 1 }
+start_date            = { year = 2026, month = 1, day = 1 }
+end_date              = { year = 2027, month = 1, day = 1 }
 
-# -----------------------------------------------------------------------------
-# Connectors — all connectors enabled for production
-# -----------------------------------------------------------------------------
+# =============================================================================
+# THIRD-PARTY CONNECTORS (OAuth)
+# =============================================================================
+# Prod: all third-party connectors enabled with full entity lists.
+# Prerequisites: Create all Secret Manager secrets BEFORE applying.
+# =============================================================================
 
 third_party_connectors = {
+
+  # ---------------------------------------------------------------------------
+  # Jira Cloud
+  # ---------------------------------------------------------------------------
   jira = {
     enabled                 = true
     data_source             = "jira"
@@ -60,6 +91,9 @@ third_party_connectors = {
     sync_mode       = "PERIODIC"
   }
 
+  # ---------------------------------------------------------------------------
+  # Confluence Cloud
+  # ---------------------------------------------------------------------------
   confluence = {
     enabled                 = true
     data_source             = "confluence"
@@ -93,6 +127,9 @@ third_party_connectors = {
     sync_mode       = "PERIODIC"
   }
 
+  # ---------------------------------------------------------------------------
+  # Salesforce
+  # ---------------------------------------------------------------------------
   salesforce = {
     enabled                 = true
     data_source             = "salesforce"
@@ -128,7 +165,14 @@ third_party_connectors = {
   }
 }
 
+# =============================================================================
+# GOOGLE WORKSPACE CONNECTORS (Native — no OAuth secrets)
+# =============================================================================
+# Prod: all workspace connectors enabled for comprehensive search coverage.
+# =============================================================================
+
 workspace_connectors = {
+
   gmail = {
     enabled                 = true
     data_source             = "google_mail"
@@ -158,27 +202,150 @@ workspace_connectors = {
     entity                  = { entity_name = "google_drive" }
     connector_modes         = ["FEDERATED"]
   }
+
+  sites = {
+    enabled                 = true
+    data_source             = "google_sites"
+    collection_id           = "prod-sites-collection"
+    collection_display_name = "Production Google Sites"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_sites" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  groups = {
+    enabled                 = true
+    data_source             = "google_groups"
+    collection_id           = "prod-groups-collection"
+    collection_display_name = "Production Google Groups"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_groups" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  people = {
+    enabled                 = true
+    data_source             = "google_cloud_identity"
+    collection_id           = "prod-people-collection"
+    collection_display_name = "Production People"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_cloud_identity" }
+    connector_modes         = ["FEDERATED"]
+  }
 }
 
-# -----------------------------------------------------------------------------
-# Widget
-# -----------------------------------------------------------------------------
+# =============================================================================
+# GCP CLOUD SOURCE CONNECTORS (No OAuth secrets)
+# =============================================================================
+# Prod: enable cloud connectors as needed.
+# NOTE: "gcs", "cloud_sql", "spanner", "alloydb" data_source values should be
+# tested in dev before enabling in production.
+# =============================================================================
+
+cloud_connectors = {
+
+  # ---------------------------------------------------------------------------
+  # BigQuery — index analytics datasets for enterprise search
+  # instance_uri format: bigquery://PROJECT_ID.DATASET_ID
+  # ---------------------------------------------------------------------------
+  bigquery = {
+    enabled                 = true
+    data_source             = "bigquery"
+    collection_id           = "prod-bigquery-collection"
+    collection_display_name = "Production BigQuery"
+
+    params = {
+      instance_uri = "bigquery://your-project-id.your_dataset"
+    }
+
+    refresh_interval             = "86400s"
+    incremental_refresh_interval = "10800s"
+
+    entities = [
+      { entity_name = "your_table" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # Uncomment to enable Cloud Storage indexing:
+  # gcs = {
+  #   enabled                 = true
+  #   data_source             = "gcs"
+  #   collection_id           = "prod-gcs-collection"
+  #   collection_display_name = "Production Cloud Storage"
+  #   params                  = {}
+  #   refresh_interval        = "86400s"
+  #   entities                = [{ entity_name = "your_bucket_entity" }]
+  #   connector_modes         = ["DATA_INGESTION"]
+  #   sync_mode               = "PERIODIC"
+  # }
+
+  # Uncomment to enable Cloud SQL / Spanner / AlloyDB:
+  # cloud_sql = { ... }  # See terraform.tfvars.example
+  # spanner   = { ... }  # See terraform.tfvars.example
+  # alloydb   = { ... }  # See terraform.tfvars.example
+}
+
+# =============================================================================
+# CLOUD DATA STORES (Standalone)
+# =============================================================================
+# Prod: use for data not managed by connectors (e.g., announcements).
+# =============================================================================
+
+cloud_data_stores = {
+
+  announcements = {
+    enabled           = true
+    data_store_id     = "prod-announcements-store"
+    display_name      = "Production Announcements"
+    industry_vertical = "GENERIC"
+    content_config    = "CONTENT_REQUIRED"
+    solution_types    = ["SOLUTION_TYPE_SEARCH"]
+  }
+}
+
+# =============================================================================
+# ENGINE FEATURES
+# =============================================================================
+# Prod: enable NotebookLM and People Search for full functionality.
+# =============================================================================
+
+engine_features = {
+  "notebook-lm"             = "FEATURE_STATE_ON"
+  "people-search-org-chart" = "FEATURE_STATE_ON"
+}
+
+# =============================================================================
+# WIDGET CONFIGURATION
+# =============================================================================
 
 enable_widget_config           = true
+widget_config_id               = "prod_search_widget_config"
+widget_enable_web_app          = true
+widget_allow_public_access     = false
+widget_allowlisted_domains     = []
 widget_interaction_type        = "SEARCH_WITH_FOLLOW_UPS"
 widget_enable_autocomplete     = true
 widget_enable_quality_feedback = true
 widget_enable_safe_search      = true
-widget_allow_public_access     = false
-widget_logo_url                = "https://your-org.com/assets/logo.svg"
 
+# Custom branding
+widget_logo_url = "https://your-org.com/assets/logo.svg"
+
+# Homepage shortcuts for quick access
 widget_homepage_shortcuts = [
   {
     title           = "Documentation"
     destination_uri = "https://docs.your-org.com"
   },
   {
-    title           = "Support"
+    title           = "Support Portal"
     destination_uri = "https://support.your-org.com"
+  },
+  {
+    title           = "Internal Wiki"
+    destination_uri = "https://wiki.your-org.com"
   }
 ]

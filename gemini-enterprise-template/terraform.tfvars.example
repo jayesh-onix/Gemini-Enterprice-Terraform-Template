@@ -8,6 +8,13 @@
 #   2. Enable the connectors you need (set enabled = true)
 #   3. Configure secrets in Secret Manager before applying
 #   4. Run: terraform init && terraform plan && terraform apply
+#
+# SUPPORTED CONNECTOR TYPES:
+#   Third-Party (OAuth):  Jira, Confluence, Salesforce
+#   Google Workspace:     Gmail, Calendar, Drive, Sites, Groups, People
+#   GCP Cloud Sources:    BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+#   Standalone Stores:    Announcements, custom structured/unstructured data
+#   Engine Features:      NotebookLM, People Search (org chart)
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -36,8 +43,8 @@ license_count         = 25
 free_trial            = true
 subscription_tier     = "SUBSCRIPTION_TIER_ENTERPRISE"
 subscription_term     = "SUBSCRIPTION_TERM_ONE_MONTH"
-start_date            = { year = 2025, month = 1, day = 1 }
-end_date              = { year = 2025, month = 12, day = 31 }
+start_date            = { year = 2026, month = 1, day = 1 }
+end_date              = { year = 2026, month = 12, day = 31 }
 
 # =============================================================================
 # THIRD-PARTY CONNECTORS (OAuth-based)
@@ -67,9 +74,9 @@ third_party_connectors = {
   #   3. Get your Cloud ID from: https://YOUR_INSTANCE.atlassian.net/_edge/tenant_info
   # ---------------------------------------------------------------------------
   jira = {
-    enabled             = false
-    data_source         = "jira"
-    collection_id       = "jira-collection"
+    enabled                 = false
+    data_source             = "jira"
+    collection_id           = "jira-collection"
     collection_display_name = "Jira"
 
     params = {
@@ -83,8 +90,8 @@ third_party_connectors = {
       refresh_token = "YOUR_PROJECT_JIRA_REFRESH_TOKEN"
     }
 
-    refresh_interval             = "86400s"  # Full refresh: daily
-    incremental_refresh_interval = "21600s"  # Incremental: every 6 hours
+    refresh_interval             = "86400s" # Full refresh: daily
+    incremental_refresh_interval = "21600s" # Incremental: every 6 hours
 
     # Valid entities: project, attachment, comment, issue, bug, epic, story, task, worklog, board
     entities = [
@@ -192,6 +199,10 @@ third_party_connectors = {
 # =============================================================================
 # Google Workspace connectors authenticate via the project's identity.
 # No Secret Manager setup is required.
+#
+# Supported data_source values:
+#   google_mail, google_calendar, google_drive,
+#   google_sites, google_groups, google_cloud_identity
 # =============================================================================
 
 workspace_connectors = {
@@ -234,6 +245,256 @@ workspace_connectors = {
     entity                  = { entity_name = "google_drive" }
     connector_modes         = ["FEDERATED"]
   }
+
+  # ---------------------------------------------------------------------------
+  # Google Sites Connector
+  # ---------------------------------------------------------------------------
+  sites = {
+    enabled                 = false
+    data_source             = "google_sites"
+    collection_id           = "sites-collection"
+    collection_display_name = "Google Sites"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_sites" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  # ---------------------------------------------------------------------------
+  # Google Groups Connector
+  # ---------------------------------------------------------------------------
+  groups = {
+    enabled                 = false
+    data_source             = "google_groups"
+    collection_id           = "groups-collection"
+    collection_display_name = "Google Groups"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_groups" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  # ---------------------------------------------------------------------------
+  # People (Cloud Identity) Connector
+  # ---------------------------------------------------------------------------
+  # Indexes user profiles from Google Cloud Identity / Workspace directory.
+  # Pairs well with the "people-search-org-chart" engine feature below.
+  # ---------------------------------------------------------------------------
+  people = {
+    enabled                 = false
+    data_source             = "google_cloud_identity"
+    collection_id           = "people-collection"
+    collection_display_name = "People"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_cloud_identity" }
+    connector_modes         = ["FEDERATED"]
+  }
+}
+
+# =============================================================================
+# GCP CLOUD SOURCE CONNECTORS (No OAuth secrets)
+# =============================================================================
+# GCP-native data source connectors. These authenticate using the project's
+# service account — no Secret Manager setup required.
+#
+# NOTE: "bigquery" is documented in the Terraform provider. "gcs", "cloud_sql",
+#       "spanner", and "alloydb" are inferred from the Discovery Engine API and
+#       should be tested in a non-production environment before enabling.
+# =============================================================================
+
+cloud_connectors = {
+
+  # ---------------------------------------------------------------------------
+  # BigQuery Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. BigQuery dataset must exist in the project
+  #   2. Discovery Engine SA needs BigQuery Data Viewer role on the dataset
+  #
+  # instance_uri format: bigquery://PROJECT_ID.DATASET_ID
+  # Entity params (JSON-encoded): data_schema, content_config, auto_generate_ids
+  # ---------------------------------------------------------------------------
+  bigquery = {
+    enabled                 = false
+    data_source             = "bigquery"
+    collection_id           = "bigquery-collection"
+    collection_display_name = "BigQuery"
+
+    params = {
+      instance_uri = "bigquery://your-project-id.your_dataset"
+    }
+
+    refresh_interval             = "86400s" # Full refresh: daily
+    incremental_refresh_interval = "10800s" # Incremental: every 3 hours
+
+    # Each entity is a BigQuery table. Use params (JSON string) for table-level config:
+    #   data_schema:       "custom" or "document" (default: unspecified)
+    #   content_config:    "content_config_unspecified", "no_content", "content_required"
+    #   auto_generate_ids: true/false
+    entities = [
+      { entity_name = "your_table" }
+      # Example with entity-level params:
+      # { entity_name = "your_table", params = "{\"data_schema\":\"custom\",\"content_config\":\"content_config_unspecified\",\"auto_generate_ids\":true}" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Cloud Storage (GCS) Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. GCS bucket must exist and contain documents
+  #   2. Discovery Engine SA needs Storage Object Viewer role on the bucket
+  # ---------------------------------------------------------------------------
+  gcs = {
+    enabled                 = false
+    data_source             = "gcs"
+    collection_id           = "gcs-collection"
+    collection_display_name = "Cloud Storage"
+
+    params = {
+      # Add GCS-specific params as needed
+      # gcs_uri = "gs://your-bucket-name/prefix/"
+    }
+
+    refresh_interval = "86400s"
+
+    entities = [
+      { entity_name = "your_bucket_entity" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Cloud SQL Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. Cloud SQL instance must exist with public or private IP
+  #   2. Discovery Engine SA needs Cloud SQL Client role
+  # ---------------------------------------------------------------------------
+  cloud_sql = {
+    enabled                 = false
+    data_source             = "cloud_sql"
+    collection_id           = "cloudsql-collection"
+    collection_display_name = "Cloud SQL"
+
+    params = {
+      # instance_connection_name = "project:region:instance"
+      # database                = "your_database"
+    }
+
+    refresh_interval = "86400s"
+
+    entities = [
+      { entity_name = "your_table" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Spanner Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. Spanner instance and database must exist
+  #   2. Discovery Engine SA needs Spanner Database Reader role
+  # ---------------------------------------------------------------------------
+  spanner = {
+    enabled                 = false
+    data_source             = "spanner"
+    collection_id           = "spanner-collection"
+    collection_display_name = "Spanner"
+
+    params = {
+      # instance_id = "your-spanner-instance"
+      # database_id = "your-database"
+    }
+
+    refresh_interval = "86400s"
+
+    entities = [
+      { entity_name = "your_table" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  # ---------------------------------------------------------------------------
+  # AlloyDB Connector
+  # ---------------------------------------------------------------------------
+  # Prerequisites:
+  #   1. AlloyDB cluster and instance must exist
+  #   2. Discovery Engine SA needs AlloyDB Client role
+  # ---------------------------------------------------------------------------
+  alloydb = {
+    enabled                 = false
+    data_source             = "alloydb"
+    collection_id           = "alloydb-collection"
+    collection_display_name = "AlloyDB"
+
+    params = {
+      # cluster_id  = "your-alloydb-cluster"
+      # instance_id = "your-alloydb-instance"
+      # database    = "your-database"
+    }
+
+    refresh_interval = "86400s"
+
+    entities = [
+      { entity_name = "your_table" }
+    ]
+
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+}
+
+# =============================================================================
+# CLOUD DATA STORES (Standalone)
+# =============================================================================
+# Standalone data stores for sources not managed via connectors.
+# Data is typically uploaded/imported separately via the Discovery Engine API
+# or Cloud Console.
+# =============================================================================
+
+cloud_data_stores = {
+
+  # ---------------------------------------------------------------------------
+  # Announcements Data Store (example — uncomment to use)
+  # ---------------------------------------------------------------------------
+  # Use this for internal company announcements that should appear in search.
+  # Data can be uploaded via the Discovery Engine API or Cloud Console.
+  # ---------------------------------------------------------------------------
+  # announcements = {
+  #   enabled           = false
+  #   data_store_id     = "announcements-store"
+  #   display_name      = "Announcements"
+  #   industry_vertical = "GENERIC"
+  #   content_config    = "CONTENT_REQUIRED"
+  #   solution_types    = ["SOLUTION_TYPE_SEARCH"]
+  # }
+}
+
+# =============================================================================
+# ENGINE FEATURES
+# =============================================================================
+# Control engine-level features. These are NOT connectors — they're feature
+# flags that enable additional capabilities on the search engine.
+#
+# Values: "FEATURE_STATE_ON" or "FEATURE_STATE_OFF"
+# =============================================================================
+
+engine_features = {
+  # Enable NotebookLM integration for the search engine
+  # "notebook-lm" = "FEATURE_STATE_ON"
+
+  # Enable People Search with org chart support
+  # (pairs with the google_cloud_identity workspace connector above)
+  # "people-search-org-chart" = "FEATURE_STATE_ON"
 }
 
 # =============================================================================

@@ -41,6 +41,16 @@ variable "location" {
 }
 
 # -----------------------------------------------------------------------------
+# API Configuration
+# -----------------------------------------------------------------------------
+
+variable "enable_discovery_engine_api" {
+  description = "Whether to auto-enable the Discovery Engine API in the project"
+  type        = bool
+  default     = true
+}
+
+# -----------------------------------------------------------------------------
 # License Configuration
 # -----------------------------------------------------------------------------
 
@@ -236,16 +246,17 @@ variable "third_party_connectors" {
 
 # -----------------------------------------------------------------------------
 # Google Workspace Connectors (Native, no OAuth secrets needed)
-# Supports: Gmail, Calendar, Drive
+# Supports: Gmail, Calendar, Drive, Sites, Groups, People (Cloud Identity)
 # -----------------------------------------------------------------------------
 
 variable "workspace_connectors" {
   description = <<-EOT
     Map of Google Workspace data connectors (no OAuth secrets required).
-    Each key is a unique connector name (e.g., "gmail", "calendar", "drive").
+    Each key is a unique connector name (e.g., "gmail", "calendar", "drive", "sites", "groups", "people").
 
     Required fields:
-      - data_source:              Connector type ("google_mail", "google_calendar", "google_drive")
+      - data_source:              Connector type ("google_mail", "google_calendar", "google_drive",
+                                  "google_sites", "google_groups", "google_cloud_identity")
       - collection_id:            Unique collection identifier for this connector
       - collection_display_name:  Human-readable collection name
       - entity:                   Single entity configuration with entity_name matching data_source
@@ -274,6 +285,124 @@ variable "workspace_connectors" {
   }))
 
   default = {}
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Source Connectors (GCP-native, no OAuth secrets)
+# Supports: BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+# -----------------------------------------------------------------------------
+
+variable "cloud_connectors" {
+  description = <<-EOT
+    Map of GCP cloud source data connectors (no OAuth secrets required).
+    Each key is a unique connector name (e.g., "bigquery", "gcs", "cloud_sql").
+
+    Required fields:
+      - data_source:              Connector type ("bigquery", "gcs", "cloud_sql", "spanner", "alloydb")
+      - collection_id:            Unique collection identifier for this connector
+      - collection_display_name:  Human-readable collection name
+      - entities:                 List of entities to sync (e.g., BigQuery tables, GCS prefixes)
+
+    Optional fields (with defaults):
+      - enabled:                       Whether this connector is active (default: true)
+      - params:                        Connection parameters (e.g., dataset, project_id, bucket)
+      - refresh_interval:              Full sync interval (default: "86400s")
+      - incremental_refresh_interval:  Incremental sync interval (default: null)
+      - static_ip_enabled:             Use static IP (default: false)
+      - connector_modes:               ["DATA_INGESTION"] and/or ["FEDERATED"] (default: ["DATA_INGESTION"])
+      - sync_mode:                     "PERIODIC" or "STREAMING" (default: "PERIODIC")
+      - auto_run_disabled:             Disable automatic sync (default: false)
+  EOT
+
+  type = map(object({
+    enabled                      = optional(bool, true)
+    data_source                  = string
+    collection_id                = string
+    collection_display_name      = string
+    params                       = optional(map(string), {})
+    refresh_interval             = optional(string, "86400s")
+    incremental_refresh_interval = optional(string, null)
+    entities = list(object({
+      entity_name = string
+      params      = optional(string, null)
+    }))
+    static_ip_enabled = optional(bool, false)
+    connector_modes   = optional(list(string), ["DATA_INGESTION"])
+    sync_mode         = optional(string, "PERIODIC")
+    auto_run_disabled = optional(bool, false)
+  }))
+
+  default = {}
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Data Stores (Standalone)
+# For sources managed as data stores rather than connectors
+# Supports: Announcements, custom unstructured/structured data stores
+# -----------------------------------------------------------------------------
+
+variable "cloud_data_stores" {
+  description = <<-EOT
+    Map of standalone Discovery Engine data stores (not connector-based).
+    Used for Announcements, custom structured/unstructured data stores, etc.
+
+    Required fields:
+      - data_store_id:   Unique identifier for the data store
+      - display_name:    Human-readable display name
+
+    Optional fields (with defaults):
+      - enabled:                      Whether this data store is active (default: true)
+      - industry_vertical:            Industry vertical (default: "GENERIC")
+      - content_config:               Content configuration (default: "CONTENT_REQUIRED")
+      - solution_types:               Solution types (default: ["SOLUTION_TYPE_SEARCH"])
+      - create_advanced_site_search:  Enable advanced site search (default: false)
+      - skip_default_schema_creation: Skip default schema (default: false)
+  EOT
+
+  type = map(object({
+    enabled                      = optional(bool, true)
+    data_store_id                = string
+    display_name                 = string
+    industry_vertical            = optional(string, "GENERIC")
+    content_config               = optional(string, "CONTENT_REQUIRED")
+    solution_types               = optional(list(string), ["SOLUTION_TYPE_SEARCH"])
+    create_advanced_site_search  = optional(bool, false)
+    skip_default_schema_creation = optional(bool, false)
+  }))
+
+  default = {}
+}
+
+# -----------------------------------------------------------------------------
+# Engine Feature Flags
+# Controls engine-level features like NotebookLM, People Search, etc.
+# -----------------------------------------------------------------------------
+
+variable "engine_features" {
+  description = <<-EOT
+    Map of engine feature flags to enable or disable.
+    Keys are feature names, values are feature states.
+
+    Supported features:
+      - "notebook-lm"                = "FEATURE_STATE_ON" or "FEATURE_STATE_OFF"
+      - "people-search-org-chart"    = "FEATURE_STATE_ON" or "FEATURE_STATE_OFF"
+
+    Example:
+      engine_features = {
+        "notebook-lm"             = "FEATURE_STATE_ON"
+        "people-search-org-chart" = "FEATURE_STATE_ON"
+      }
+  EOT
+
+  type    = map(string)
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for v in values(var.engine_features) : contains(["FEATURE_STATE_ON", "FEATURE_STATE_OFF"], v)
+    ])
+    error_message = "Engine feature values must be either 'FEATURE_STATE_ON' or 'FEATURE_STATE_OFF'."
+  }
 }
 
 # -----------------------------------------------------------------------------

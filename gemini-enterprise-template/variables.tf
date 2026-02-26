@@ -109,6 +109,16 @@ variable "end_date" {
 }
 
 # -----------------------------------------------------------------------------
+# API Configuration
+# -----------------------------------------------------------------------------
+
+variable "enable_discovery_engine_api" {
+  description = "Whether to auto-enable the Discovery Engine API. Set to false if API is already managed externally."
+  type        = bool
+  default     = true
+}
+
+# -----------------------------------------------------------------------------
 # Data Connectors
 # See terraform.tfvars.example for full configuration examples
 # -----------------------------------------------------------------------------
@@ -137,7 +147,7 @@ variable "third_party_connectors" {
 }
 
 variable "workspace_connectors" {
-  description = "Map of Google Workspace connectors (Gmail, Calendar, Drive)"
+  description = "Map of Google Workspace connectors (Gmail, Calendar, Drive, Sites, Groups, People)"
   type = map(object({
     enabled                 = optional(bool, true)
     data_source             = string
@@ -153,6 +163,49 @@ variable "workspace_connectors" {
     auto_run_disabled = optional(bool, false)
   }))
   default = {}
+}
+
+variable "cloud_connectors" {
+  description = "Map of GCP cloud source connectors (BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB)"
+  type = map(object({
+    enabled                      = optional(bool, true)
+    data_source                  = string
+    collection_id                = string
+    collection_display_name      = string
+    params                       = optional(map(string), {})
+    refresh_interval             = optional(string, "86400s")
+    incremental_refresh_interval = optional(string, null)
+    entities = list(object({
+      entity_name = string
+      params      = optional(string, null)
+    }))
+    static_ip_enabled = optional(bool, false)
+    connector_modes   = optional(list(string), ["DATA_INGESTION"])
+    sync_mode         = optional(string, "PERIODIC")
+    auto_run_disabled = optional(bool, false)
+  }))
+  default = {}
+}
+
+variable "cloud_data_stores" {
+  description = "Map of standalone data stores (Announcements, custom data stores)"
+  type = map(object({
+    enabled                      = optional(bool, true)
+    data_store_id                = string
+    display_name                 = string
+    industry_vertical            = optional(string, "GENERIC")
+    content_config               = optional(string, "CONTENT_REQUIRED")
+    solution_types               = optional(list(string), ["SOLUTION_TYPE_SEARCH"])
+    create_advanced_site_search  = optional(bool, false)
+    skip_default_schema_creation = optional(bool, false)
+  }))
+  default = {}
+}
+
+variable "engine_features" {
+  description = "Map of engine feature flags (e.g., notebook-lm, people-search-org-chart)"
+  type        = map(string)
+  default     = {}
 }
 
 # -----------------------------------------------------------------------------

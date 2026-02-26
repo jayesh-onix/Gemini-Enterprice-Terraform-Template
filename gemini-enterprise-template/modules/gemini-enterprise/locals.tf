@@ -15,6 +15,14 @@ locals {
     for k, v in var.workspace_connectors : k => v if v.enabled
   }
 
+  enabled_cloud_connectors = {
+    for k, v in var.cloud_connectors : k => v if v.enabled
+  }
+
+  enabled_cloud_data_stores = {
+    for k, v in var.cloud_data_stores : k => v if v.enabled
+  }
+
   # -------------------------------------------------------------------------
   # Flatten all secrets across third-party connectors for batch lookup
   # Key format: "connector_key/secret_key" => { connector_key, secret_key, secret_id }
@@ -52,9 +60,21 @@ locals {
     "${conn.collection_id}_${conn.entity.entity_name}"
   ]
 
+  cloud_connector_data_store_ids = flatten([
+    for conn_key, conn in local.enabled_cloud_connectors : [
+      for entity in conn.entities : "${conn.collection_id}_${entity.entity_name}"
+    ]
+  ])
+
+  cloud_data_store_ids = [
+    for k, v in local.enabled_cloud_data_stores : v.data_store_id
+  ]
+
   all_connector_data_store_ids = concat(
     local.third_party_data_store_ids,
-    local.workspace_data_store_ids
+    local.workspace_data_store_ids,
+    local.cloud_connector_data_store_ids,
+    local.cloud_data_store_ids
   )
 
   # Use connector-derived data store IDs if any connectors are enabled,

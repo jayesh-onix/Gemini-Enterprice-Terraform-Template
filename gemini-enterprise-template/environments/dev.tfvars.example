@@ -1,28 +1,59 @@
 # =============================================================================
 # Development Environment Configuration
 # =============================================================================
-# Usage: terraform plan -var-file="environments/dev.tfvars"
+# Usage:
+#   cp environments/dev.tfvars.example environments/dev.tfvars
+#   terraform plan  -var-file="environments/dev.tfvars"
+#   terraform apply -var-file="environments/dev.tfvars"
+#
+# This file shows a minimal dev setup:
+#   - Free-trial license (no billing commitment)
+#   - One third-party connector (Jira) for testing
+#   - Two workspace connectors (Gmail, Calendar) for testing
+#   - No cloud connectors (enable as needed)
+#   - Basic widget with no public access
+#
+# See terraform.tfvars.example for the FULL reference with all connectors.
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# Required: GCP Project
+# -----------------------------------------------------------------------------
 
 project_id = "your-dev-project-id"
 
 # -----------------------------------------------------------------------------
-# Gemini Enterprise
+# Gemini Enterprise Configuration
 # -----------------------------------------------------------------------------
 
 discovery_engine_location  = "global"
 search_engine_id           = "gemini-enterprise-dev"
 search_engine_display_name = "Gemini Enterprise (Dev)"
+app_type                   = "APP_TYPE_INTRANET"
+search_tier                = "SEARCH_TIER_ENTERPRISE"
+search_add_ons             = ["SEARCH_ADD_ON_LLM"]
 
-# License — use free trial for dev
+# -----------------------------------------------------------------------------
+# License — free trial for dev (no billing commitment)
+# -----------------------------------------------------------------------------
+
 enable_license_config = false
+license_count         = 10
 free_trial            = true
+subscription_tier     = "SUBSCRIPTION_TIER_ENTERPRISE"
+subscription_term     = "SUBSCRIPTION_TERM_ONE_MONTH"
+start_date            = { year = 2026, month = 1, day = 1 }
+end_date              = { year = 2026, month = 2, day = 1 }
 
-# -----------------------------------------------------------------------------
-# Connectors — enable only what you need for development
-# -----------------------------------------------------------------------------
+# =============================================================================
+# THIRD-PARTY CONNECTORS (OAuth)
+# =============================================================================
+# Dev: enable only the connector you're actively developing/testing against.
+# See terraform.tfvars.example for Confluence and Salesforce examples.
+# =============================================================================
 
 third_party_connectors = {
+
   jira = {
     enabled                 = true
     data_source             = "jira"
@@ -51,9 +82,22 @@ third_party_connectors = {
     connector_modes = ["FEDERATED"]
     sync_mode       = "PERIODIC"
   }
+
+  # Uncomment to test Confluence or Salesforce in dev:
+  # confluence = { ... }   # See terraform.tfvars.example
+  # salesforce = { ... }   # See terraform.tfvars.example
 }
 
+# =============================================================================
+# GOOGLE WORKSPACE CONNECTORS (Native — no OAuth secrets)
+# =============================================================================
+# Dev: enable a couple for testing. Add more as needed.
+# Supported: google_mail, google_calendar, google_drive,
+#            google_sites, google_groups, google_cloud_identity
+# =============================================================================
+
 workspace_connectors = {
+
   gmail = {
     enabled                 = true
     data_source             = "google_mail"
@@ -63,12 +107,99 @@ workspace_connectors = {
     entity                  = { entity_name = "google_mail" }
     connector_modes         = ["FEDERATED"]
   }
+
+  calendar = {
+    enabled                 = true
+    data_source             = "google_calendar"
+    collection_id           = "dev-calendar-collection"
+    collection_display_name = "Dev Calendar"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_calendar" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  # Uncomment to test additional workspace connectors:
+  # drive = {
+  #   enabled                 = false
+  #   data_source             = "google_drive"
+  #   collection_id           = "dev-drive-collection"
+  #   collection_display_name = "Dev Google Drive"
+  #   refresh_interval        = "3600s"
+  #   entity                  = { entity_name = "google_drive" }
+  #   connector_modes         = ["FEDERATED"]
+  # }
+  #
+  # sites = {
+  #   enabled                 = false
+  #   data_source             = "google_sites"
+  #   collection_id           = "dev-sites-collection"
+  #   collection_display_name = "Dev Google Sites"
+  #   refresh_interval        = "3600s"
+  #   entity                  = { entity_name = "google_sites" }
+  #   connector_modes         = ["FEDERATED"]
+  # }
+  #
+  # groups = {
+  #   enabled                 = false
+  #   data_source             = "google_groups"
+  #   collection_id           = "dev-groups-collection"
+  #   collection_display_name = "Dev Google Groups"
+  #   refresh_interval        = "3600s"
+  #   entity                  = { entity_name = "google_groups" }
+  #   connector_modes         = ["FEDERATED"]
+  # }
+  #
+  # people = {
+  #   enabled                 = false
+  #   data_source             = "google_cloud_identity"
+  #   collection_id           = "dev-people-collection"
+  #   collection_display_name = "Dev People"
+  #   refresh_interval        = "3600s"
+  #   entity                  = { entity_name = "google_cloud_identity" }
+  #   connector_modes         = ["FEDERATED"]
+  # }
 }
 
-# -----------------------------------------------------------------------------
-# Widget
-# -----------------------------------------------------------------------------
+# =============================================================================
+# GCP CLOUD SOURCE CONNECTORS (No OAuth secrets)
+# =============================================================================
+# Dev: typically not needed unless testing BigQuery/GCS indexing.
+# See terraform.tfvars.example for BigQuery, GCS, Cloud SQL, Spanner, AlloyDB.
+# =============================================================================
 
-enable_widget_config       = true
-widget_interaction_type    = "SEARCH_WITH_ANSWER"
-widget_allow_public_access = false
+cloud_connectors = {}
+
+# =============================================================================
+# CLOUD DATA STORES (Standalone)
+# =============================================================================
+# Dev: typically not needed. See terraform.tfvars.example for examples.
+# =============================================================================
+
+cloud_data_stores = {}
+
+# =============================================================================
+# ENGINE FEATURES
+# =============================================================================
+# Dev: enable features you're testing. Values: FEATURE_STATE_ON / OFF
+# =============================================================================
+
+engine_features = {
+  # "notebook-lm"             = "FEATURE_STATE_ON"
+  # "people-search-org-chart" = "FEATURE_STATE_ON"
+}
+
+# =============================================================================
+# WIDGET CONFIGURATION
+# =============================================================================
+
+enable_widget_config           = true
+widget_config_id               = "dev_search_widget_config"
+widget_enable_web_app          = true
+widget_allow_public_access     = false
+widget_allowlisted_domains     = []
+widget_interaction_type        = "SEARCH_WITH_ANSWER"
+widget_enable_autocomplete     = true
+widget_enable_quality_feedback = false # Less noise in dev
+widget_enable_safe_search      = true
+widget_logo_url                = null
+widget_homepage_shortcuts      = []

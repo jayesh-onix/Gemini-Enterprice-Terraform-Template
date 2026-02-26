@@ -92,6 +92,42 @@ output "workspace_connector_states" {
 }
 
 # -----------------------------------------------------------------------------
+# Cloud Connector Outputs
+# -----------------------------------------------------------------------------
+
+output "cloud_connector_names" {
+  description = "Map of cloud connector names (key → resource name)"
+  value = {
+    for k, v in google_discovery_engine_data_connector.cloud : k => v.name
+  }
+}
+
+output "cloud_connector_states" {
+  description = "Map of cloud connector states (key → state)"
+  value = {
+    for k, v in google_discovery_engine_data_connector.cloud : k => v.state
+  }
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Data Store Outputs
+# -----------------------------------------------------------------------------
+
+output "cloud_data_store_names" {
+  description = "Map of cloud data store names (key → resource name)"
+  value = {
+    for k, v in google_discovery_engine_data_store.cloud : k => v.name
+  }
+}
+
+output "cloud_data_store_ids" {
+  description = "Map of cloud data store IDs (key → data_store_id)"
+  value = {
+    for k, v in google_discovery_engine_data_store.cloud : k => v.data_store_id
+  }
+}
+
+# -----------------------------------------------------------------------------
 # Widget Configuration
 # -----------------------------------------------------------------------------
 

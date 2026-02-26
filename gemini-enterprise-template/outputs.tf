@@ -84,6 +84,34 @@ output "workspace_connector_states" {
 }
 
 # -----------------------------------------------------------------------------
+# Cloud Connectors
+# -----------------------------------------------------------------------------
+
+output "cloud_connector_names" {
+  description = "Map of cloud connector resource names"
+  value       = module.gemini_enterprise.cloud_connector_names
+}
+
+output "cloud_connector_states" {
+  description = "Map of cloud connector states"
+  value       = module.gemini_enterprise.cloud_connector_states
+}
+
+# -----------------------------------------------------------------------------
+# Cloud Data Stores
+# -----------------------------------------------------------------------------
+
+output "cloud_data_store_names" {
+  description = "Map of cloud data store resource names"
+  value       = module.gemini_enterprise.cloud_data_store_names
+}
+
+output "cloud_data_store_ids" {
+  description = "Map of cloud data store IDs"
+  value       = module.gemini_enterprise.cloud_data_store_ids
+}
+
+# -----------------------------------------------------------------------------
 # Widget
 # -----------------------------------------------------------------------------
 

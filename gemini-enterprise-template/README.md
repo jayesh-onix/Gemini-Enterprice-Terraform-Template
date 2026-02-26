@@ -9,7 +9,10 @@ A production-ready, **generic and reusable** Terraform template for deploying Go
 | **Gemini Enterprise License** | Optional — configurable tier, term, and seat count |
 | **Discovery Engine Search Engine** | Enterprise search with LLM (Gemini) capabilities |
 | **Third-Party Connectors** | Jira, Confluence, Salesforce (OAuth via Secret Manager) |
-| **Google Workspace Connectors** | Gmail, Calendar, Drive (native — no secrets needed) |
+| **Google Workspace Connectors** | Gmail, Calendar, Drive, Sites, Groups, People (native — no secrets needed) |
+| **Cloud Source Connectors** | BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB (GCP-native) |
+| **Cloud Data Stores** | Announcements, custom structured/unstructured data stores |
+| **Engine Features** | NotebookLM, People Search with org chart |
 | **Search Widget** | Embeddable UI with branding, autocomplete, and Q&A modes |
 
 ## Key Design Principles
@@ -31,7 +34,10 @@ A production-ready, **generic and reusable** Terraform template for deploying Go
 3. [Quick Start (5 Steps)](#quick-start-5-steps)
 4. [Step-by-Step Configuration Guide](#step-by-step-configuration-guide)
    - [Third-Party Connectors (Jira, Confluence, Salesforce)](#third-party-connectors-jira-confluence-salesforce)
-   - [Google Workspace Connectors (Gmail, Calendar, Drive)](#google-workspace-connectors-gmail-calendar-drive)
+   - [Google Workspace Connectors (Gmail, Calendar, Drive, Sites, Groups, People)](#google-workspace-connectors-gmail-calendar-drive-sites-groups-people)
+   - [Cloud Source Connectors (BigQuery, GCS, Cloud SQL, Spanner, AlloyDB)](#cloud-source-connectors-bigquery-gcs-cloud-sql-spanner-alloydb)
+   - [Cloud Data Stores (Announcements, Custom)](#cloud-data-stores-announcements-custom)
+   - [Engine Features (NotebookLM, People Search)](#engine-features-notebooklm-people-search)
    - [Widget Configuration](#widget-configuration)
    - [License Configuration](#license-configuration)
 5. [Multi-Environment Deployment](#multi-environment-deployment)
@@ -74,7 +80,8 @@ gemini-enterprise-template/
 └── modules/
     └── gemini-enterprise/
         ├── main.tf             # License + Search Engine + Widget resources
-        ├── connectors.tf       # ALL connectors in one file (third-party + workspace)
+        ├── connectors.tf       # ALL connectors (third-party + workspace + cloud source)
+        ├── data_stores.tf      # Standalone cloud data stores (Announcements, custom)
         ├── locals.tf           # Computed values: data store IDs, secret flattening
         ├── variables.tf        # Module input variables with full validation
         ├── outputs.tf          # Module outputs
@@ -260,7 +267,7 @@ third_party_connectors = {
 
 ---
 
-### Google Workspace Connectors (Gmail, Calendar, Drive)
+### Google Workspace Connectors (Gmail, Calendar, Drive, Sites, Groups, People)
 
 These connectors use your GCP project's Google Workspace identity — **no OAuth secrets or Secret Manager setup required**.
 
@@ -269,6 +276,9 @@ These connectors use your GCP project's Google Workspace identity — **no OAuth
 | Gmail | `google_mail` | `google_mail` |
 | Google Calendar | `google_calendar` | `google_calendar` |
 | Google Drive | `google_drive` | `google_drive` |
+| Google Sites | `google_sites` | `google_sites` |
+| Google Groups | `google_groups` | `google_groups` |
+| People (Cloud Identity) | `google_cloud_identity` | `google_cloud_identity` |
 
 ```hcl
 workspace_connectors = {
@@ -302,8 +312,134 @@ workspace_connectors = {
     entity                  = { entity_name = "google_drive" }
     connector_modes         = ["FEDERATED"]
   }
+
+  sites = {
+    enabled                 = true
+    data_source             = "google_sites"
+    collection_id           = "sites-collection"
+    collection_display_name = "Google Sites"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_sites" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  groups = {
+    enabled                 = true
+    data_source             = "google_groups"
+    collection_id           = "groups-collection"
+    collection_display_name = "Google Groups"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_groups" }
+    connector_modes         = ["FEDERATED"]
+  }
+
+  people = {
+    enabled                 = true
+    data_source             = "google_cloud_identity"
+    collection_id           = "people-collection"
+    collection_display_name = "People"
+    refresh_interval        = "3600s"
+    entity                  = { entity_name = "google_cloud_identity" }
+    connector_modes         = ["FEDERATED"]
+  }
 }
 ```
+
+---
+
+### Cloud Source Connectors (BigQuery, GCS, Cloud SQL, Spanner, AlloyDB)
+
+GCP-native data source connectors. These use the project's service account — **no Secret Manager setup required**. However, you must grant the Discovery Engine SA appropriate IAM roles on the source resource (e.g., BigQuery Data Viewer, Storage Object Viewer).
+
+| Connector | `data_source` value | IAM Role Needed | Entities |
+|-----------|---------------------|-----------------|----------|
+| BigQuery | `bigquery` | BigQuery Data Viewer | Tables/views to index |
+| Cloud Storage | `gcs` | Storage Object Viewer | Bucket entities |
+| Cloud SQL | `cloud_sql` | Cloud SQL Client | Tables |
+| Spanner | `spanner` | Spanner Database Reader | Tables |
+| AlloyDB | `alloydb` | AlloyDB Client | Tables |
+
+```hcl
+cloud_connectors = {
+
+  bigquery = {
+    enabled                 = true
+    data_source             = "bigquery"
+    collection_id           = "bigquery-collection"
+    collection_display_name = "BigQuery"
+    # instance_uri is required for BigQuery — format: "bigquery://PROJECT_ID.DATASET_ID"
+    params = {
+      instance_uri = "bigquery://your-project-id.your_dataset"
+    }
+    refresh_interval        = "86400s"
+    entities = [
+      { entity_name = "your_dataset.your_table" }
+    ]
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+
+  gcs = {
+    enabled                 = true
+    data_source             = "gcs"
+    collection_id           = "gcs-collection"
+    collection_display_name = "Cloud Storage"
+    params                  = {}
+    refresh_interval        = "86400s"
+    entities = [
+      { entity_name = "your_bucket_entity" }
+    ]
+    connector_modes = ["DATA_INGESTION"]
+    sync_mode       = "PERIODIC"
+  }
+}
+```
+
+---
+
+### Cloud Data Stores (Announcements, Custom)
+
+Standalone data stores for sources that don't use connectors. Data is typically uploaded via the Discovery Engine API or Cloud Console.
+
+```hcl
+cloud_data_stores = {
+
+  announcements = {
+    enabled           = true
+    data_store_id     = "announcements-store"
+    display_name      = "Announcements"
+    industry_vertical = "GENERIC"
+    content_config    = "CONTENT_REQUIRED"
+    solution_types    = ["SOLUTION_TYPE_SEARCH"]
+  }
+}
+```
+
+| `content_config` value | Use case |
+|------------------------|----------|
+| `NO_CONTENT` | Structured data only (metadata) |
+| `CONTENT_REQUIRED` | Unstructured data (documents, announcements) |
+| `PUBLIC_WEBSITE` | Website content (for crawling) |
+
+---
+
+### Engine Features (NotebookLM, People Search)
+
+Engine features are NOT connectors — they're feature flags that enable additional capabilities on the search engine.
+
+```hcl
+engine_features = {
+  "notebook-lm"             = "FEATURE_STATE_ON"   # Enable NotebookLM integration
+  "people-search-org-chart" = "FEATURE_STATE_ON"   # Enable People Search with org chart
+}
+```
+
+| Feature Key | Description |
+|-------------|-------------|
+| `notebook-lm` | Enables NotebookLM functionality within the search engine |
+| `people-search-org-chart` | Enables People Search with organizational chart support |
+
+Values: `FEATURE_STATE_ON` (enable) or `FEATURE_STATE_OFF` (disable)
 
 ---
 
@@ -438,6 +574,18 @@ Edit each file with environment-specific values. Both files share the same codeb
 | Gmail | `google_mail` |
 | Calendar | `google_calendar` |
 | Drive | `google_drive` |
+| Sites | `google_sites` |
+| Groups | `google_groups` |
+| People (Cloud Identity) | `google_cloud_identity` |
+
+### Cloud Source Connectors
+| Connector | Entity format | Example |
+|-----------|---------------|---------|
+| BigQuery | `dataset.table` | `my_dataset.users` |
+| Cloud Storage | Bucket entity name | `my_bucket_docs` |
+| Cloud SQL | Table name | `users` |
+| Spanner | Table name | `orders` |
+| AlloyDB | Table name | `transactions` |
 
 ---
 
@@ -488,6 +636,10 @@ After `terraform apply`, these values are printed:
 | `third_party_connector_states` | Map of third-party connector sync states |
 | `workspace_connector_names` | Map of created workspace connector resource names |
 | `workspace_connector_states` | Map of workspace connector sync states |
+| `cloud_connector_names` | Map of created cloud connector resource names |
+| `cloud_connector_states` | Map of cloud connector sync states |
+| `cloud_data_store_names` | Map of created data store resource names |
+| `cloud_data_store_ids` | Map of data store IDs |
 | `linked_data_store_ids` | All data store IDs linked to the search engine |
 | `widget_config_id` | The widget configuration ID |
 | `license_config_id` | The license configuration ID (when enabled) |

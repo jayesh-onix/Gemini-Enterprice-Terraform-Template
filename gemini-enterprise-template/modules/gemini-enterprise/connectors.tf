@@ -8,6 +8,27 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
+# GCP API Enablement
+# Auto-enables required APIs so users don't need to do it manually
+# -----------------------------------------------------------------------------
+
+resource "google_project_service" "discoveryengine" {
+  count   = var.enable_discovery_engine_api ? 1 : 0
+  project = var.project_id
+  service = "discoveryengine.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "secretmanager" {
+  count   = local.needs_service_identity ? 1 : 0
+  project = var.project_id
+  service = "secretmanager.googleapis.com"
+
+  disable_on_destroy = false
+}
+
+# -----------------------------------------------------------------------------
 # Discovery Engine Service Agent Identity
 # Required for granting Secret Manager access to third-party connectors
 # -----------------------------------------------------------------------------
@@ -17,6 +38,8 @@ resource "google_project_service_identity" "discovery_engine_sa" {
   provider = google-beta
   project  = var.project_id
   service  = "discoveryengine.googleapis.com"
+
+  depends_on = [google_project_service.discoveryengine]
 }
 
 # -----------------------------------------------------------------------------
@@ -29,6 +52,8 @@ data "google_secret_manager_secret" "connector_secrets" {
   provider  = google
   project   = var.project_id
   secret_id = each.value.secret_id
+
+  depends_on = [google_project_service.secretmanager]
 }
 
 resource "google_secret_manager_secret_iam_member" "discovery_engine_secret_access" {
@@ -86,6 +111,7 @@ resource "google_discovery_engine_data_connector" "third_party" {
   }
 
   depends_on = [
+    google_project_service.discoveryengine,
     google_secret_manager_secret_iam_member.discovery_engine_secret_access,
     google_discovery_engine_license_config.main
   ]
@@ -93,8 +119,8 @@ resource "google_discovery_engine_data_connector" "third_party" {
 
 # -----------------------------------------------------------------------------
 # Google Workspace Data Connectors (Native)
-# Creates connectors for Gmail, Calendar, Drive
-# No OAuth secrets required - uses Google Workspace identity
+# Creates connectors for Gmail, Calendar, Drive, Sites, Groups, People
+# No OAuth secrets required - uses Google Workspace / Cloud Identity
 # -----------------------------------------------------------------------------
 
 resource "google_discovery_engine_data_connector" "workspace" {
@@ -120,6 +146,50 @@ resource "google_discovery_engine_data_connector" "workspace" {
   auto_run_disabled = each.value.auto_run_disabled
 
   depends_on = [
+    google_project_service.discoveryengine,
+    google_discovery_engine_license_config.main
+  ]
+}
+
+# -----------------------------------------------------------------------------
+# GCP Cloud Source Data Connectors
+# Creates connectors for BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+# No OAuth secrets required — uses project service account
+# -----------------------------------------------------------------------------
+
+resource "google_discovery_engine_data_connector" "cloud" {
+  for_each = local.enabled_cloud_connectors
+
+  provider                = google
+  project                 = var.project_id
+  location                = var.location
+  collection_id           = each.value.collection_id
+  collection_display_name = each.value.collection_display_name
+  data_source             = each.value.data_source
+
+  params                       = each.value.params
+  refresh_interval             = each.value.refresh_interval
+  incremental_refresh_interval = each.value.incremental_refresh_interval
+
+  dynamic "entities" {
+    for_each = each.value.entities
+    content {
+      entity_name = entities.value.entity_name
+      params      = entities.value.params
+    }
+  }
+
+  static_ip_enabled = each.value.static_ip_enabled
+  connector_modes   = each.value.connector_modes
+  sync_mode         = each.value.sync_mode
+  auto_run_disabled = each.value.auto_run_disabled
+
+  lifecycle {
+    ignore_changes = all
+  }
+
+  depends_on = [
+    google_project_service.discoveryengine,
     google_discovery_engine_license_config.main
   ]
 }
