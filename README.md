@@ -9,8 +9,8 @@ A production-ready, **generic and reusable** Terraform template for deploying Go
 | **Gemini Enterprise License** | Optional — configurable tier, term, and seat count |
 | **Discovery Engine Search Engine** | Enterprise search with LLM (Gemini) capabilities |
 | **Third-Party Connectors** | Jira, Confluence, Salesforce (OAuth via Secret Manager) |
-| **Google Workspace Connectors** | Gmail, Calendar, Drive, Sites, Groups, People (native — no secrets needed) |
-| **Cloud Source Connectors** | BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB (GCP-native) |
+| **Google Workspace Connectors** | Gmail, Calendar, Drive, Sites (native — no secrets needed) |
+| **Cloud Source Connectors** | BigQuery (GCP-native) |
 | **Cloud Data Stores** | Announcements, custom structured/unstructured data stores |
 | **Engine Features** | NotebookLM, People Search with org chart |
 | **Search Widget** | Embeddable UI with branding, autocomplete, and Q&A modes |
@@ -34,8 +34,8 @@ A production-ready, **generic and reusable** Terraform template for deploying Go
 3. [Quick Start (5 Steps)](#quick-start-5-steps)
 4. [Step-by-Step Configuration Guide](#step-by-step-configuration-guide)
    - [Third-Party Connectors (Jira, Confluence, Salesforce)](#third-party-connectors-jira-confluence-salesforce)
-   - [Google Workspace Connectors (Gmail, Calendar, Drive, Sites, Groups, People)](#google-workspace-connectors-gmail-calendar-drive-sites-groups-people)
-   - [Cloud Source Connectors (BigQuery, GCS, Cloud SQL, Spanner, AlloyDB)](#cloud-source-connectors-bigquery-gcs-cloud-sql-spanner-alloydb)
+   - [Google Workspace Connectors (Gmail, Calendar, Drive, Sites)](#google-workspace-connectors-gmail-calendar-drive-sites)
+   - [Cloud Source Connectors (BigQuery)](#cloud-source-connectors-bigquery)
    - [Cloud Data Stores (Announcements, Custom)](#cloud-data-stores-announcements-custom)
    - [Engine Features (NotebookLM, People Search)](#engine-features-notebooklm-people-search)
    - [Widget Configuration](#widget-configuration)
@@ -57,9 +57,69 @@ Before you start, make sure you have:
 - [ ] **Terraform >= 1.7.0** installed — [Install guide](https://developer.hashicorp.com/terraform/install)
 - [ ] **Google Cloud SDK** installed and authenticated — `gcloud auth application-default login`
 - [ ] A **GCP Project** with billing enabled
-- [ ] **Owner or Editor** IAM role on the GCP project (for initial setup)
+- [ ] **Required IAM permissions** on the GCP project (see [Required Permissions](#required-permissions))
 - [ ] **GCP APIs enabled** (see [GCP APIs to Enable](#gcp-apis-to-enable))
 - [ ] For third-party connectors: secrets created in **GCP Secret Manager** before applying
+
+---
+
+## Required Permissions
+
+The user or service account running Terraform needs the following IAM permissions:
+
+### Core Permissions (always required)
+
+| Permission / Role | Why It's Needed |
+|-------------------|-----------------|
+| `roles/discoveryengine.admin` | Create and manage Discovery Engine search engines, connectors, and data stores |
+| `roles/serviceusage.serviceUsageAdmin` | Enable GCP APIs (`discoveryengine.googleapis.com`, `secretmanager.googleapis.com`) |
+| `roles/iam.serviceAccountAdmin` | Create the Discovery Engine service agent identity |
+
+### Third-Party Connector Permissions (Jira, Confluence, Salesforce)
+
+| Permission / Role | Why It's Needed |
+|-------------------|-----------------|
+| `roles/secretmanager.admin` | Create and manage secrets in Secret Manager (for storing OAuth credentials) |
+| `roles/secretmanager.secretAccessor` | Automatically granted to the Discovery Engine SA by Terraform — allows the connector to read OAuth secrets |
+| `roles/iam.securityAdmin` or `roles/resourcemanager.projectIamAdmin` | Grant IAM bindings on Secret Manager secrets to the Discovery Engine service agent |
+
+### Cloud Connector Permissions (BigQuery)
+
+| Permission / Role | Why It's Needed |
+|-------------------|-----------------|
+| `roles/bigquery.dataViewer` | Discovery Engine SA needs this on the BigQuery dataset to read data for indexing |
+
+### Minimum Viable Setup
+
+For a quick test with only workspace connectors (no secrets needed):
+```
+roles/discoveryengine.admin
+roles/serviceusage.serviceUsageAdmin
+```
+
+For third-party connectors (Jira/Confluence/Salesforce), add:
+```
+roles/secretmanager.admin
+roles/iam.securityAdmin
+```
+
+---
+
+## Third-Party Connector Setup Guides
+
+Before configuring third-party connectors, you need to set up OAuth credentials in the respective platforms. Follow the official Google Cloud documentation:
+
+| Connector | Official Setup Guide |
+|-----------|---------------------|
+| **Jira Cloud** | [Jira Cloud Third-Party Config](https://docs.cloud.google.com/gemini/enterprise/docs/connectors/jira-cloud/third-party-config) |
+| **Confluence Cloud** | [Confluence Cloud Third-Party Config](https://docs.cloud.google.com/gemini/enterprise/docs/connectors/confluence-cloud/third-party-config) |
+| **Salesforce** | [Connect Salesforce](https://docs.cloud.google.com/gemini/enterprise/docs/connectors/salesforce/connect-salesforce) |
+
+These guides walk you through:
+1. Creating an OAuth app in the third-party platform (Atlassian Developer Console / Salesforce Connected App)
+2. Configuring the correct scopes and redirect URI (`https://vertexaisearch.cloud.google.com/oauth-redirect`)
+3. Obtaining `client_id`, `client_secret`, and `refresh_token`
+4. Storing the credentials in GCP Secret Manager
 
 ---
 
@@ -267,7 +327,7 @@ third_party_connectors = {
 
 ---
 
-### Google Workspace Connectors (Gmail, Calendar, Drive, Sites, Groups, People)
+### Google Workspace Connectors (Gmail, Calendar, Drive, Sites)
 
 These connectors use your GCP project's Google Workspace identity — **no OAuth secrets or Secret Manager setup required**.
 
@@ -277,8 +337,6 @@ These connectors use your GCP project's Google Workspace identity — **no OAuth
 | Google Calendar | `google_calendar` | `google_calendar` |
 | Google Drive | `google_drive` | `google_drive` |
 | Google Sites | `google_sites` | `google_sites` |
-| Google Groups | `google_groups` | `google_groups` |
-| People (Cloud Identity) | `google_cloud_identity` | `google_cloud_identity` |
 
 ```hcl
 workspace_connectors = {
@@ -322,42 +380,18 @@ workspace_connectors = {
     entity                  = { entity_name = "google_sites" }
     connector_modes         = ["FEDERATED"]
   }
-
-  groups = {
-    enabled                 = true
-    data_source             = "google_groups"
-    collection_id           = "groups-collection"
-    collection_display_name = "Google Groups"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_groups" }
-    connector_modes         = ["FEDERATED"]
-  }
-
-  people = {
-    enabled                 = true
-    data_source             = "google_cloud_identity"
-    collection_id           = "people-collection"
-    collection_display_name = "People"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_cloud_identity" }
-    connector_modes         = ["FEDERATED"]
-  }
 }
 ```
 
 ---
 
-### Cloud Source Connectors (BigQuery, GCS, Cloud SQL, Spanner, AlloyDB)
+### Cloud Source Connectors (BigQuery)
 
-GCP-native data source connectors. These use the project's service account — **no Secret Manager setup required**. However, you must grant the Discovery Engine SA appropriate IAM roles on the source resource (e.g., BigQuery Data Viewer, Storage Object Viewer).
+GCP-native data source connectors. These use the project's service account — **no Secret Manager setup required**. However, you must grant the Discovery Engine SA appropriate IAM roles on the source resource (e.g., BigQuery Data Viewer).
 
 | Connector | `data_source` value | IAM Role Needed | Entities |
 |-----------|---------------------|-----------------|----------|
 | BigQuery | `bigquery` | BigQuery Data Viewer | Tables/views to index |
-| Cloud Storage | `gcs` | Storage Object Viewer | Bucket entities |
-| Cloud SQL | `cloud_sql` | Cloud SQL Client | Tables |
-| Spanner | `spanner` | Spanner Database Reader | Tables |
-| AlloyDB | `alloydb` | AlloyDB Client | Tables |
 
 ```hcl
 cloud_connectors = {
@@ -374,20 +408,6 @@ cloud_connectors = {
     refresh_interval        = "86400s"
     entities = [
       { entity_name = "your_dataset.your_table" }
-    ]
-    connector_modes = ["DATA_INGESTION"]
-    sync_mode       = "PERIODIC"
-  }
-
-  gcs = {
-    enabled                 = true
-    data_source             = "gcs"
-    collection_id           = "gcs-collection"
-    collection_display_name = "Cloud Storage"
-    params                  = {}
-    refresh_interval        = "86400s"
-    entities = [
-      { entity_name = "your_bucket_entity" }
     ]
     connector_modes = ["DATA_INGESTION"]
     sync_mode       = "PERIODIC"
@@ -575,17 +595,11 @@ Edit each file with environment-specific values. Both files share the same codeb
 | Calendar | `google_calendar` |
 | Drive | `google_drive` |
 | Sites | `google_sites` |
-| Groups | `google_groups` |
-| People (Cloud Identity) | `google_cloud_identity` |
 
 ### Cloud Source Connectors
 | Connector | Entity format | Example |
 |-----------|---------------|---------|
 | BigQuery | `dataset.table` | `my_dataset.users` |
-| Cloud Storage | Bucket entity name | `my_bucket_docs` |
-| Cloud SQL | Table name | `users` |
-| Spanner | Table name | `orders` |
-| AlloyDB | Table name | `transactions` |
 
 ---
 

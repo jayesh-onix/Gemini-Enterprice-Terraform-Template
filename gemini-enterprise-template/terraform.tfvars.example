@@ -11,8 +11,8 @@
 #
 # SUPPORTED CONNECTOR TYPES:
 #   Third-Party (OAuth):  Jira, Confluence, Salesforce
-#   Google Workspace:     Gmail, Calendar, Drive, Sites, Groups, People
-#   GCP Cloud Sources:    BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+#   Google Workspace:     Gmail, Calendar, Drive, Sites
+#   GCP Cloud Sources:    BigQuery
 #   Standalone Stores:    Announcements, custom structured/unstructured data
 #   Engine Features:      NotebookLM, People Search (org chart)
 # =============================================================================
@@ -201,8 +201,7 @@ third_party_connectors = {
 # No Secret Manager setup is required.
 #
 # Supported data_source values:
-#   google_mail, google_calendar, google_drive,
-#   google_sites, google_groups, google_cloud_identity
+#   google_mail, google_calendar, google_drive, google_sites
 # =============================================================================
 
 workspace_connectors = {
@@ -259,34 +258,6 @@ workspace_connectors = {
     connector_modes         = ["FEDERATED"]
   }
 
-  # ---------------------------------------------------------------------------
-  # Google Groups Connector
-  # ---------------------------------------------------------------------------
-  groups = {
-    enabled                 = false
-    data_source             = "google_groups"
-    collection_id           = "groups-collection"
-    collection_display_name = "Google Groups"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_groups" }
-    connector_modes         = ["FEDERATED"]
-  }
-
-  # ---------------------------------------------------------------------------
-  # People (Cloud Identity) Connector
-  # ---------------------------------------------------------------------------
-  # Indexes user profiles from Google Cloud Identity / Workspace directory.
-  # Pairs well with the "people-search-org-chart" engine feature below.
-  # ---------------------------------------------------------------------------
-  people = {
-    enabled                 = false
-    data_source             = "google_cloud_identity"
-    collection_id           = "people-collection"
-    collection_display_name = "People"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_cloud_identity" }
-    connector_modes         = ["FEDERATED"]
-  }
 }
 
 # =============================================================================
@@ -294,10 +265,6 @@ workspace_connectors = {
 # =============================================================================
 # GCP-native data source connectors. These authenticate using the project's
 # service account — no Secret Manager setup required.
-#
-# NOTE: "bigquery" is documented in the Terraform provider. "gcs", "cloud_sql",
-#       "spanner", and "alloydb" are inferred from the Discovery Engine API and
-#       should be tested in a non-production environment before enabling.
 # =============================================================================
 
 cloud_connectors = {
@@ -333,119 +300,6 @@ cloud_connectors = {
       { entity_name = "your_table" }
       # Example with entity-level params:
       # { entity_name = "your_table", params = "{\"data_schema\":\"custom\",\"content_config\":\"content_config_unspecified\",\"auto_generate_ids\":true}" }
-    ]
-
-    connector_modes = ["DATA_INGESTION"]
-    sync_mode       = "PERIODIC"
-  }
-
-  # ---------------------------------------------------------------------------
-  # Cloud Storage (GCS) Connector
-  # ---------------------------------------------------------------------------
-  # Prerequisites:
-  #   1. GCS bucket must exist and contain documents
-  #   2. Discovery Engine SA needs Storage Object Viewer role on the bucket
-  # ---------------------------------------------------------------------------
-  gcs = {
-    enabled                 = false
-    data_source             = "gcs"
-    collection_id           = "gcs-collection"
-    collection_display_name = "Cloud Storage"
-
-    params = {
-      # Add GCS-specific params as needed
-      # gcs_uri = "gs://your-bucket-name/prefix/"
-    }
-
-    refresh_interval = "86400s"
-
-    entities = [
-      { entity_name = "your_bucket_entity" }
-    ]
-
-    connector_modes = ["DATA_INGESTION"]
-    sync_mode       = "PERIODIC"
-  }
-
-  # ---------------------------------------------------------------------------
-  # Cloud SQL Connector
-  # ---------------------------------------------------------------------------
-  # Prerequisites:
-  #   1. Cloud SQL instance must exist with public or private IP
-  #   2. Discovery Engine SA needs Cloud SQL Client role
-  # ---------------------------------------------------------------------------
-  cloud_sql = {
-    enabled                 = false
-    data_source             = "cloud_sql"
-    collection_id           = "cloudsql-collection"
-    collection_display_name = "Cloud SQL"
-
-    params = {
-      # instance_connection_name = "project:region:instance"
-      # database                = "your_database"
-    }
-
-    refresh_interval = "86400s"
-
-    entities = [
-      { entity_name = "your_table" }
-    ]
-
-    connector_modes = ["DATA_INGESTION"]
-    sync_mode       = "PERIODIC"
-  }
-
-  # ---------------------------------------------------------------------------
-  # Spanner Connector
-  # ---------------------------------------------------------------------------
-  # Prerequisites:
-  #   1. Spanner instance and database must exist
-  #   2. Discovery Engine SA needs Spanner Database Reader role
-  # ---------------------------------------------------------------------------
-  spanner = {
-    enabled                 = false
-    data_source             = "spanner"
-    collection_id           = "spanner-collection"
-    collection_display_name = "Spanner"
-
-    params = {
-      # instance_id = "your-spanner-instance"
-      # database_id = "your-database"
-    }
-
-    refresh_interval = "86400s"
-
-    entities = [
-      { entity_name = "your_table" }
-    ]
-
-    connector_modes = ["DATA_INGESTION"]
-    sync_mode       = "PERIODIC"
-  }
-
-  # ---------------------------------------------------------------------------
-  # AlloyDB Connector
-  # ---------------------------------------------------------------------------
-  # Prerequisites:
-  #   1. AlloyDB cluster and instance must exist
-  #   2. Discovery Engine SA needs AlloyDB Client role
-  # ---------------------------------------------------------------------------
-  alloydb = {
-    enabled                 = false
-    data_source             = "alloydb"
-    collection_id           = "alloydb-collection"
-    collection_display_name = "AlloyDB"
-
-    params = {
-      # cluster_id  = "your-alloydb-cluster"
-      # instance_id = "your-alloydb-instance"
-      # database    = "your-database"
-    }
-
-    refresh_interval = "86400s"
-
-    entities = [
-      { entity_name = "your_table" }
     ]
 
     connector_modes = ["DATA_INGESTION"]

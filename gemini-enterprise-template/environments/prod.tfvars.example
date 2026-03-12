@@ -9,7 +9,7 @@
 # This file shows a full production deployment:
 #   - Paid annual license with 100 seats
 #   - All third-party connectors (Jira, Confluence, Salesforce)
-#   - All workspace connectors (Gmail, Calendar, Drive, Sites, Groups, People)
+#   - All workspace connectors (Gmail, Calendar, Drive, Sites)
 #   - BigQuery cloud connector enabled
 #   - Announcements data store
 #   - NotebookLM + People Search engine features
@@ -212,34 +212,13 @@ workspace_connectors = {
     entity                  = { entity_name = "google_sites" }
     connector_modes         = ["FEDERATED"]
   }
-
-  groups = {
-    enabled                 = true
-    data_source             = "google_groups"
-    collection_id           = "prod-groups-collection"
-    collection_display_name = "Production Google Groups"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_groups" }
-    connector_modes         = ["FEDERATED"]
-  }
-
-  people = {
-    enabled                 = true
-    data_source             = "google_cloud_identity"
-    collection_id           = "prod-people-collection"
-    collection_display_name = "Production People"
-    refresh_interval        = "3600s"
-    entity                  = { entity_name = "google_cloud_identity" }
-    connector_modes         = ["FEDERATED"]
-  }
 }
 
 # =============================================================================
 # GCP CLOUD SOURCE CONNECTORS (No OAuth secrets)
 # =============================================================================
 # Prod: enable cloud connectors as needed.
-# NOTE: "gcs", "cloud_sql", "spanner", "alloydb" data_source values should be
-# tested in dev before enabling in production.
+# NOTE: Only BigQuery is supported as a cloud connector in this template.
 # =============================================================================
 
 cloud_connectors = {
@@ -268,24 +247,6 @@ cloud_connectors = {
     connector_modes = ["DATA_INGESTION"]
     sync_mode       = "PERIODIC"
   }
-
-  # Uncomment to enable Cloud Storage indexing:
-  # gcs = {
-  #   enabled                 = true
-  #   data_source             = "gcs"
-  #   collection_id           = "prod-gcs-collection"
-  #   collection_display_name = "Production Cloud Storage"
-  #   params                  = {}
-  #   refresh_interval        = "86400s"
-  #   entities                = [{ entity_name = "your_bucket_entity" }]
-  #   connector_modes         = ["DATA_INGESTION"]
-  #   sync_mode               = "PERIODIC"
-  # }
-
-  # Uncomment to enable Cloud SQL / Spanner / AlloyDB:
-  # cloud_sql = { ... }  # See terraform.tfvars.example
-  # spanner   = { ... }  # See terraform.tfvars.example
-  # alloydb   = { ... }  # See terraform.tfvars.example
 }
 
 # =============================================================================

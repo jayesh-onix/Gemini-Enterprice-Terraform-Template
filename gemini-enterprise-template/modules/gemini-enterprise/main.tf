@@ -64,6 +64,13 @@ resource "google_discovery_engine_search_engine" "main" {
   # Engine-level feature flags (NotebookLM, People Search, etc.)
   features = length(var.engine_features) > 0 ? var.engine_features : null
 
+  lifecycle {
+    ignore_changes = [
+      knowledge_graph_config,
+      features,
+    ]
+  }
+
   depends_on = [
     google_discovery_engine_data_connector.third_party,
     google_discovery_engine_data_connector.workspace,

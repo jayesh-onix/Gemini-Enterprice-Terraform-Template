@@ -246,17 +246,17 @@ variable "third_party_connectors" {
 
 # -----------------------------------------------------------------------------
 # Google Workspace Connectors (Native, no OAuth secrets needed)
-# Supports: Gmail, Calendar, Drive, Sites, Groups, People (Cloud Identity)
+# Supports: Gmail, Calendar, Drive, Sites
 # -----------------------------------------------------------------------------
 
 variable "workspace_connectors" {
   description = <<-EOT
     Map of Google Workspace data connectors (no OAuth secrets required).
-    Each key is a unique connector name (e.g., "gmail", "calendar", "drive", "sites", "groups", "people").
+    Each key is a unique connector name (e.g., "gmail", "calendar", "drive", "sites").
 
     Required fields:
       - data_source:              Connector type ("google_mail", "google_calendar", "google_drive",
-                                  "google_sites", "google_groups", "google_cloud_identity")
+                                  "google_sites")
       - collection_id:            Unique collection identifier for this connector
       - collection_display_name:  Human-readable collection name
       - entity:                   Single entity configuration with entity_name matching data_source
@@ -289,16 +289,16 @@ variable "workspace_connectors" {
 
 # -----------------------------------------------------------------------------
 # Cloud Source Connectors (GCP-native, no OAuth secrets)
-# Supports: BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+# Supports: BigQuery
 # -----------------------------------------------------------------------------
 
 variable "cloud_connectors" {
   description = <<-EOT
     Map of GCP cloud source data connectors (no OAuth secrets required).
-    Each key is a unique connector name (e.g., "bigquery", "gcs", "cloud_sql").
+    Each key is a unique connector name (e.g., "bigquery").
 
     Required fields:
-      - data_source:              Connector type ("bigquery", "gcs", "cloud_sql", "spanner", "alloydb")
+      - data_source:              Connector type ("bigquery")
       - collection_id:            Unique collection identifier for this connector
       - collection_display_name:  Human-readable collection name
       - entities:                 List of entities to sync (e.g., BigQuery tables, GCS prefixes)

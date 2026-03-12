@@ -147,7 +147,7 @@ variable "third_party_connectors" {
 }
 
 variable "workspace_connectors" {
-  description = "Map of Google Workspace connectors (Gmail, Calendar, Drive, Sites, Groups, People)"
+  description = "Map of Google Workspace connectors (Gmail, Calendar, Drive, Sites)"
   type = map(object({
     enabled                 = optional(bool, true)
     data_source             = string
@@ -166,7 +166,7 @@ variable "workspace_connectors" {
 }
 
 variable "cloud_connectors" {
-  description = "Map of GCP cloud source connectors (BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB)"
+  description = "Map of GCP cloud source connectors (BigQuery)"
   type = map(object({
     enabled                      = optional(bool, true)
     data_source                  = string

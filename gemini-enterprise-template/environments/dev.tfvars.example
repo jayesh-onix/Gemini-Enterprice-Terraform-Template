@@ -92,8 +92,7 @@ third_party_connectors = {
 # GOOGLE WORKSPACE CONNECTORS (Native — no OAuth secrets)
 # =============================================================================
 # Dev: enable a couple for testing. Add more as needed.
-# Supported: google_mail, google_calendar, google_drive,
-#            google_sites, google_groups, google_cloud_identity
+# Supported: google_mail, google_calendar, google_drive, google_sites
 # =============================================================================
 
 workspace_connectors = {
@@ -138,33 +137,13 @@ workspace_connectors = {
   #   entity                  = { entity_name = "google_sites" }
   #   connector_modes         = ["FEDERATED"]
   # }
-  #
-  # groups = {
-  #   enabled                 = false
-  #   data_source             = "google_groups"
-  #   collection_id           = "dev-groups-collection"
-  #   collection_display_name = "Dev Google Groups"
-  #   refresh_interval        = "3600s"
-  #   entity                  = { entity_name = "google_groups" }
-  #   connector_modes         = ["FEDERATED"]
-  # }
-  #
-  # people = {
-  #   enabled                 = false
-  #   data_source             = "google_cloud_identity"
-  #   collection_id           = "dev-people-collection"
-  #   collection_display_name = "Dev People"
-  #   refresh_interval        = "3600s"
-  #   entity                  = { entity_name = "google_cloud_identity" }
-  #   connector_modes         = ["FEDERATED"]
-  # }
 }
 
 # =============================================================================
 # GCP CLOUD SOURCE CONNECTORS (No OAuth secrets)
 # =============================================================================
 # Dev: typically not needed unless testing BigQuery/GCS indexing.
-# See terraform.tfvars.example for BigQuery, GCS, Cloud SQL, Spanner, AlloyDB.
+# See terraform.tfvars.example for BigQuery connector.
 # =============================================================================
 
 cloud_connectors = {}

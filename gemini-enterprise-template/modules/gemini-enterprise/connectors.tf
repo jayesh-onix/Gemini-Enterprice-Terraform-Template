@@ -119,8 +119,8 @@ resource "google_discovery_engine_data_connector" "third_party" {
 
 # -----------------------------------------------------------------------------
 # Google Workspace Data Connectors (Native)
-# Creates connectors for Gmail, Calendar, Drive, Sites, Groups, People
-# No OAuth secrets required - uses Google Workspace / Cloud Identity
+# Creates connectors for Gmail, Calendar, Drive, Sites
+# No OAuth secrets required - uses Google Workspace identity
 # -----------------------------------------------------------------------------
 
 resource "google_discovery_engine_data_connector" "workspace" {
@@ -153,7 +153,7 @@ resource "google_discovery_engine_data_connector" "workspace" {
 
 # -----------------------------------------------------------------------------
 # GCP Cloud Source Data Connectors
-# Creates connectors for BigQuery, Cloud Storage, Cloud SQL, Spanner, AlloyDB
+# Creates connectors for BigQuery
 # No OAuth secrets required — uses project service account
 # -----------------------------------------------------------------------------
 
