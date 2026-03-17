@@ -177,15 +177,9 @@ third_party_connectors = {
     refresh_interval             = "86400s"
     incremental_refresh_interval = "10800s" # Every 3 hours
 
-    # Valid entities: account, case, contact, contentdocument, lead, opportunity, task
+    # Minimal entity for stable validation: account
     entities = [
-      { entity_name = "lead" },
-      { entity_name = "opportunity" },
-      { entity_name = "account" },
-      { entity_name = "contact" },
-      { entity_name = "case" },
-      { entity_name = "task" },
-      { entity_name = "contentdocument" }
+      { entity_name = "account" }
     ]
 
     connector_modes   = ["DATA_INGESTION"]

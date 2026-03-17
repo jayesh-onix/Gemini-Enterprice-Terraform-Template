@@ -106,10 +106,6 @@ resource "google_discovery_engine_data_connector" "third_party" {
   sync_mode         = each.value.sync_mode
   auto_run_disabled = each.value.auto_run_disabled
 
-  lifecycle {
-    ignore_changes = all
-  }
-
   depends_on = [
     google_project_service.discoveryengine,
     google_secret_manager_secret_iam_member.discovery_engine_secret_access,
@@ -183,10 +179,6 @@ resource "google_discovery_engine_data_connector" "cloud" {
   connector_modes   = each.value.connector_modes
   sync_mode         = each.value.sync_mode
   auto_run_disabled = each.value.auto_run_disabled
-
-  lifecycle {
-    ignore_changes = all
-  }
 
   depends_on = [
     google_project_service.discoveryengine,

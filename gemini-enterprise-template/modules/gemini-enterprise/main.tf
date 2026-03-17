@@ -68,6 +68,7 @@ resource "google_discovery_engine_search_engine" "main" {
     ignore_changes = [
       knowledge_graph_config,
       features,
+      data_store_ids, # GCP manages this automatically via the connector API after initial creation
     ]
   }
 

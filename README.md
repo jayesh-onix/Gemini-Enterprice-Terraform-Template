@@ -79,7 +79,8 @@ The user or service account running Terraform needs the following IAM permission
 
 | Permission / Role | Why It's Needed |
 |-------------------|-----------------|
-| `roles/secretmanager.admin` | Create and manage secrets in Secret Manager (for storing OAuth credentials) |
+| `roles/secretmanager.admin` | Create, manage, and rotate secrets in Secret Manager (for storing OAuth credentials) |
+| `secretmanager.secrets.setIamPolicy` | Required when Terraform grants Secret Manager access to the Discovery Engine service agent; maps to projects/secret policies in addition to `roles/iam.securityAdmin` if using custom granular grants |
 | `roles/secretmanager.secretAccessor` | Automatically granted to the Discovery Engine SA by Terraform — allows the connector to read OAuth secrets |
 | `roles/iam.securityAdmin` or `roles/resourcemanager.projectIamAdmin` | Grant IAM bindings on Secret Manager secrets to the Discovery Engine service agent |
 
