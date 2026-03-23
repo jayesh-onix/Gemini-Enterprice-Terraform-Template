@@ -92,6 +92,7 @@ resource "google_discovery_engine_data_connector" "third_party" {
 
   refresh_interval             = each.value.refresh_interval
   incremental_refresh_interval = each.value.incremental_refresh_interval
+  incremental_sync_disabled    = each.value.incremental_sync_disabled
 
   dynamic "entities" {
     for_each = each.value.entities
@@ -105,6 +106,12 @@ resource "google_discovery_engine_data_connector" "third_party" {
   connector_modes   = each.value.connector_modes
   sync_mode         = each.value.sync_mode
   auto_run_disabled = each.value.auto_run_disabled
+
+  lifecycle {
+    ignore_changes = [
+      collection_display_name, # immutable after creation in GCP API
+    ]
+  }
 
   depends_on = [
     google_project_service.discoveryengine,
@@ -141,6 +148,13 @@ resource "google_discovery_engine_data_connector" "workspace" {
   static_ip_enabled = each.value.static_ip_enabled
   auto_run_disabled = each.value.auto_run_disabled
 
+  lifecycle {
+    ignore_changes = [
+      collection_display_name, # immutable after creation in GCP API
+      json_params,             # immutable after creation in GCP API
+    ]
+  }
+
   depends_on = [
     google_project_service.discoveryengine,
     google_discovery_engine_license_config.main
@@ -166,6 +180,7 @@ resource "google_discovery_engine_data_connector" "cloud" {
   params                       = each.value.params
   refresh_interval             = each.value.refresh_interval
   incremental_refresh_interval = each.value.incremental_refresh_interval
+  incremental_sync_disabled    = each.value.incremental_sync_disabled
 
   dynamic "entities" {
     for_each = each.value.entities
@@ -179,6 +194,15 @@ resource "google_discovery_engine_data_connector" "cloud" {
   connector_modes   = each.value.connector_modes
   sync_mode         = each.value.sync_mode
   auto_run_disabled = each.value.auto_run_disabled
+
+  lifecycle {
+    ignore_changes = [
+      collection_display_name, # immutable after creation in GCP API
+      sync_mode,               # immutable after creation in GCP API
+      params,                  # immutable after creation in GCP API
+      auto_run_disabled,       # immutable after creation in GCP API
+    ]
+  }
 
   depends_on = [
     google_project_service.discoveryengine,

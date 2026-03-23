@@ -146,16 +146,21 @@ third_party_connectors = {
       client_secret = "PROD_SALESFORCE_CLIENT_SECRET"
     }
 
-    refresh_interval             = "86400s"
-    incremental_refresh_interval = "10800s"
+    refresh_interval          = "10800s"
+    incremental_sync_disabled = true
 
     entities = [
+      { entity_name = "contentdocument" },
+      {
+        entity_name = "account"
+        params      = "{\"inclusion_filters\": {}, \"exclusion_filters\": {}}"
+      },
       { entity_name = "lead" },
       { entity_name = "opportunity" },
-      { entity_name = "account" },
       { entity_name = "contact" },
       { entity_name = "case" },
-      { entity_name = "task" },
+      { entity_name = "task" }
+    ]
       { entity_name = "contentdocument" }
     ]
 

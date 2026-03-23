@@ -216,6 +216,7 @@ variable "third_party_connectors" {
       - enabled:                       Whether this connector is active (default: true)
       - refresh_interval:              Full sync interval (default: "86400s")
       - incremental_refresh_interval:  Incremental sync interval (default: null)
+      - incremental_sync_disabled:     Disable incremental sync (default: null)
       - static_ip_enabled:             Use static IP (default: false)
       - connector_modes:               ["DATA_INGESTION"] and/or ["FEDERATED"] (default: ["FEDERATED"])
       - sync_mode:                     "PERIODIC" or "MANUAL" (default: "PERIODIC")
@@ -231,6 +232,7 @@ variable "third_party_connectors" {
     secrets                      = map(string)
     refresh_interval             = optional(string, "86400s")
     incremental_refresh_interval = optional(string, null)
+    incremental_sync_disabled    = optional(bool, null)
     entities = list(object({
       entity_name = string
       params      = optional(string, null)
@@ -308,6 +310,7 @@ variable "cloud_connectors" {
       - params:                        Connection parameters (e.g., dataset, project_id, bucket)
       - refresh_interval:              Full sync interval (default: "86400s")
       - incremental_refresh_interval:  Incremental sync interval (default: null)
+      - incremental_sync_disabled:     Disable incremental sync (default: null)
       - static_ip_enabled:             Use static IP (default: false)
       - connector_modes:               ["DATA_INGESTION"] and/or ["FEDERATED"] (default: ["DATA_INGESTION"])
       - sync_mode:                     "PERIODIC" or "STREAMING" (default: "PERIODIC")
@@ -322,6 +325,7 @@ variable "cloud_connectors" {
     params                       = optional(map(string), {})
     refresh_interval             = optional(string, "86400s")
     incremental_refresh_interval = optional(string, null)
+    incremental_sync_disabled    = optional(bool, null)
     entities = list(object({
       entity_name = string
       params      = optional(string, null)
