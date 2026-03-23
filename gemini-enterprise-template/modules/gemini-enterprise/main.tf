@@ -67,13 +67,13 @@ resource "google_discovery_engine_search_engine" "main" {
   lifecycle {
     ignore_changes = [
       knowledge_graph_config,
-      features #,
-      # data_store_ids, # GCP manages this automatically via the connector API after initial creation
+      features
     ]
   }
 
   depends_on = [
     google_discovery_engine_data_connector.third_party,
+    google_discovery_engine_data_connector.cloud,
     google_discovery_engine_data_connector.workspace,
     google_discovery_engine_data_connector.cloud,
     google_discovery_engine_data_store.cloud,

@@ -62,7 +62,7 @@ locals {
 
   cloud_connector_data_store_ids = flatten([
     for conn_key, conn in local.enabled_cloud_connectors : [
-      for entity in conn.entities : "${conn.collection_id}_${entity.entity_name}"
+      for entity in conn.entities : "${conn.collection_id}_${lower(entity.entity_name)}"
     ]
   ])
 

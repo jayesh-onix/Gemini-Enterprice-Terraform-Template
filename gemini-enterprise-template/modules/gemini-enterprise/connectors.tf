@@ -195,6 +195,11 @@ resource "google_discovery_engine_data_connector" "cloud" {
   sync_mode         = each.value.sync_mode
   auto_run_disabled = each.value.auto_run_disabled
 
+  timeouts {
+    create = "30m"
+    update = "30m"
+  }
+
   lifecycle {
     ignore_changes = [
       collection_display_name, # immutable after creation in GCP API
