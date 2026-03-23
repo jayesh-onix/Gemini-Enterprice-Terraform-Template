@@ -692,6 +692,41 @@ A connector failed to create its data stores — usually because OAuth credentia
 2. Re-create the secrets in Secret Manager with fresh values
 3. Re-run `terraform apply`
 
+### `Error 400: DataStore ... currently exists in list at index ... of Engine`
+
+This error occurs when you try to rename an entity (e.g., a BigQuery table), change a `collection_id`, or delete a connector. Terraform tries to destroy the Data Connector while its data stores are still actively linked to your Search Engine, which the GCP API prevents to avoid breaking the application.
+
+#### Solution 1: The "Safe" Method (Terraform Only)
+1. In `terraform.tfvars`, set `enabled = false` for the problematic connector.
+2. Run `terraform apply`. Terraform will first unlink the data stores from the Search Engine and then successfully destroy the connector.
+3. Once destroyed, update your configuration (e.g., fix the table name or entity name) and set `enabled = true`.
+4. Run `terraform apply` again to recreate the connector and link it back.
+
+#### Solution 2: Quick Force Fix (API / curl)
+If you are in a deadlock where Terraform cannot proceed, you can manually unlink the data stores using these commands:
+
+```bash
+# 1. GET your current engine config to see the full list of linked data stores
+# Replace YOUR_PROJECT_ID and YOUR_ENGINE_ID
+curl -X GET -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "x-goog-user-project: YOUR_PROJECT_ID" \
+  "https://discoveryengine.googleapis.com/v1/projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/engines/YOUR_ENGINE_ID"
+
+# 2. PATCH the engine to ONLY include the data stores you want to KEEP 
+# (Remove the problematic IDs from the list below)
+curl -X PATCH -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "x-goog-user-project: YOUR_PROJECT_ID" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dataStoreIds": [
+      "keep_this_data_store_1",
+      "keep_this_data_store_2"
+    ]
+  }' \
+  "https://discoveryengine.googleapis.com/v1/projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/engines/YOUR_ENGINE_ID?updateMask=dataStoreIds"
+```
+Once the problematic data store is unlinked, your `terraform apply` will succeed.
+
 ### `lifecycle { ignore_changes = all }` — why is my connector not updating?
 
 Third-party connectors use `lifecycle { ignore_changes = all }` to prevent Terraform from overwriting credentials and sync settings that GCP manages internally after first creation. This is intentional.
