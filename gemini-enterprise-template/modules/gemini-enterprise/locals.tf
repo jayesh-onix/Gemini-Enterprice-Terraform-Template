@@ -51,23 +51,23 @@ locals {
   # -------------------------------------------------------------------------
   third_party_data_store_ids = flatten([
     for conn_key, conn in local.enabled_third_party_connectors : [
-      for entity in conn.entities : "${conn.collection_id}_${entity.entity_name}"
-    ]
+      for entity in conn.entities : "${conn.collection_id}_${lower(entity.entity_name)}"
+    ] if conn.linked
   ])
 
   workspace_data_store_ids = [
     for conn_key, conn in local.enabled_workspace_connectors :
-    "${conn.collection_id}_${conn.entity.entity_name}"
+    "${conn.collection_id}_${lower(conn.entity.entity_name)}" if conn.linked
   ]
 
   cloud_connector_data_store_ids = flatten([
     for conn_key, conn in local.enabled_cloud_connectors : [
       for entity in conn.entities : "${conn.collection_id}_${lower(entity.entity_name)}"
-    ]
+    ] if conn.linked
   ])
 
   cloud_data_store_ids = [
-    for k, v in local.enabled_cloud_data_stores : v.data_store_id
+    for k, v in local.enabled_cloud_data_stores : v.data_store_id if v.linked
   ]
 
   all_connector_data_store_ids = concat(
@@ -77,11 +77,11 @@ locals {
     local.cloud_data_store_ids
   )
 
-  # Use connector-derived data store IDs if any connectors are enabled,
-  # otherwise fall back to explicitly provided data_store_ids
-  effective_data_store_ids = length(local.all_connector_data_store_ids) > 0 ? (
-    local.all_connector_data_store_ids
-  ) : var.data_store_ids
+  # Combine connector-derived data store IDs with explicitly provided data_store_ids
+  effective_data_store_ids = distinct(concat(
+    local.all_connector_data_store_ids,
+    var.data_store_ids
+  ))
 
   # -------------------------------------------------------------------------
   # Computed values

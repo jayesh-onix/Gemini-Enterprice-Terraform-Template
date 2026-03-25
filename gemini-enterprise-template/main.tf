@@ -23,6 +23,7 @@ module "gemini_enterprise" {
   app_type            = var.app_type
   search_tier         = var.search_tier
   search_add_ons      = var.search_add_ons
+  data_store_ids      = var.data_store_ids
 
   # -------------------------------------------------------------------------
   # License Configuration

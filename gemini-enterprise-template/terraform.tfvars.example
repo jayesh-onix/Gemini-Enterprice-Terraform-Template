@@ -75,6 +75,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   jira = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "jira"
     collection_id           = "jira-collection"
     collection_display_name = "Jira"
@@ -118,6 +119,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   confluence = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "confluence"
     collection_id           = "confluence-collection"
     collection_display_name = "Confluence"
@@ -160,6 +162,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   salesforce = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "salesforce"
     collection_id           = "salesforce-collection"
     collection_display_name = "Salesforce"
@@ -211,6 +214,7 @@ workspace_connectors = {
   # ---------------------------------------------------------------------------
   gmail = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_mail"
     collection_id           = "mail-collection"
     collection_display_name = "Gmail"
@@ -224,6 +228,7 @@ workspace_connectors = {
   # ---------------------------------------------------------------------------
   calendar = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_calendar"
     collection_id           = "calendar-collection"
     collection_display_name = "Google Calendar"
@@ -237,6 +242,7 @@ workspace_connectors = {
   # ---------------------------------------------------------------------------
   drive = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_drive"
     collection_id           = "drive-collection"
     collection_display_name = "Google Drive"
@@ -250,6 +256,7 @@ workspace_connectors = {
   # ---------------------------------------------------------------------------
   sites = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_sites"
     collection_id           = "sites-collection"
     collection_display_name = "Google Sites"
@@ -281,6 +288,7 @@ cloud_connectors = {
   # ---------------------------------------------------------------------------
   bigquery = {
     enabled                 = false
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "bigquery"
     collection_id           = "bigquery-collection"
     collection_display_name = "BigQuery"

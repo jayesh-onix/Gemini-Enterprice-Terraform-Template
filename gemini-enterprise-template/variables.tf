@@ -54,6 +54,12 @@ variable "search_add_ons" {
   default     = ["SEARCH_ADD_ON_LLM"]
 }
 
+variable "data_store_ids" {
+  description = "Explicit data store IDs (only used when no connectors are enabled)"
+  type        = list(string)
+  default     = []
+}
+
 # -----------------------------------------------------------------------------
 # License Configuration
 # -----------------------------------------------------------------------------
@@ -127,6 +133,7 @@ variable "third_party_connectors" {
   description = "Map of third-party OAuth connectors (Jira, Confluence, Salesforce, etc.)"
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_source                  = string
     collection_id                = string
     collection_display_name      = string
@@ -150,6 +157,7 @@ variable "workspace_connectors" {
   description = "Map of Google Workspace connectors (Gmail, Calendar, Drive, Sites)"
   type = map(object({
     enabled                 = optional(bool, true)
+    linked                  = optional(bool, true)
     data_source             = string
     collection_id           = string
     collection_display_name = string
@@ -169,6 +177,7 @@ variable "cloud_connectors" {
   description = "Map of GCP cloud source connectors (BigQuery)"
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_source                  = string
     collection_id                = string
     collection_display_name      = string
@@ -191,6 +200,7 @@ variable "cloud_data_stores" {
   description = "Map of standalone data stores (Announcements, custom data stores)"
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_store_id                = string
     display_name                 = string
     industry_vertical            = optional(string, "GENERIC")

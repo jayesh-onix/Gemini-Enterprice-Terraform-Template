@@ -32,6 +32,7 @@ search_engine_display_name = "Gemini Enterprise (Dev)"
 app_type                   = "APP_TYPE_INTRANET"
 search_tier                = "SEARCH_TIER_ENTERPRISE"
 search_add_ons             = ["SEARCH_ADD_ON_LLM"]
+data_store_ids              = []
 
 # -----------------------------------------------------------------------------
 # License — free trial for dev (no billing commitment)
@@ -56,6 +57,7 @@ third_party_connectors = {
 
   jira = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "jira"
     collection_id           = "dev-jira-collection"
     collection_display_name = "Dev Jira"
@@ -84,8 +86,11 @@ third_party_connectors = {
   }
 
   # Uncomment to test Confluence or Salesforce in dev:
-  # confluence = { ... }   # See terraform.tfvars.example
-  # salesforce = { ... }   # See terraform.tfvars.example
+  # confluence = { 
+  #   enabled = false
+  #   linked  = true
+  #   ... 
+  # }
 }
 
 # =============================================================================
@@ -99,6 +104,7 @@ workspace_connectors = {
 
   gmail = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_mail"
     collection_id           = "dev-mail-collection"
     collection_display_name = "Dev Gmail"
@@ -109,6 +115,7 @@ workspace_connectors = {
 
   calendar = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_calendar"
     collection_id           = "dev-calendar-collection"
     collection_display_name = "Dev Calendar"
@@ -117,24 +124,14 @@ workspace_connectors = {
     connector_modes         = ["FEDERATED"]
   }
 
-  # Uncomment to test additional workspace connectors:
   # drive = {
   #   enabled                 = false
+  #   linked                  = true
   #   data_source             = "google_drive"
   #   collection_id           = "dev-drive-collection"
   #   collection_display_name = "Dev Google Drive"
   #   refresh_interval        = "3600s"
   #   entity                  = { entity_name = "google_drive" }
-  #   connector_modes         = ["FEDERATED"]
-  # }
-  #
-  # sites = {
-  #   enabled                 = false
-  #   data_source             = "google_sites"
-  #   collection_id           = "dev-sites-collection"
-  #   collection_display_name = "Dev Google Sites"
-  #   refresh_interval        = "3600s"
-  #   entity                  = { entity_name = "google_sites" }
   #   connector_modes         = ["FEDERATED"]
   # }
 }

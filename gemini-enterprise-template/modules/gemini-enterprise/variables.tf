@@ -213,6 +213,7 @@ variable "third_party_connectors" {
       - entities:                 List of entities to sync
 
     Optional fields (with defaults):
+      - linked:                        Whether this connector is linked to the search engine (default: true)
       - enabled:                       Whether this connector is active (default: true)
       - refresh_interval:              Full sync interval (default: "86400s")
       - incremental_refresh_interval:  Incremental sync interval (default: null)
@@ -225,6 +226,7 @@ variable "third_party_connectors" {
 
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_source                  = string
     collection_id                = string
     collection_display_name      = string
@@ -264,6 +266,7 @@ variable "workspace_connectors" {
       - entity:                   Single entity configuration with entity_name matching data_source
 
     Optional fields (with defaults):
+      - linked:                        Whether this connector is linked to the search engine (default: true)
       - enabled:            Whether this connector is active (default: true)
       - refresh_interval:   Sync interval (default: "3600s")
       - static_ip_enabled:  Use static IP (default: false)
@@ -273,6 +276,7 @@ variable "workspace_connectors" {
 
   type = map(object({
     enabled                 = optional(bool, true)
+    linked                  = optional(bool, true)
     data_source             = string
     collection_id           = string
     collection_display_name = string
@@ -306,6 +310,7 @@ variable "cloud_connectors" {
       - entities:                 List of entities to sync (e.g., BigQuery tables, GCS prefixes)
 
     Optional fields (with defaults):
+      - linked:                        Whether this connector is linked to the search engine (default: true)
       - enabled:                       Whether this connector is active (default: true)
       - params:                        Connection parameters (e.g., dataset, project_id, bucket)
       - refresh_interval:              Full sync interval (default: "86400s")
@@ -319,6 +324,7 @@ variable "cloud_connectors" {
 
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_source                  = string
     collection_id                = string
     collection_display_name      = string
@@ -355,6 +361,7 @@ variable "cloud_data_stores" {
       - display_name:    Human-readable display name
 
     Optional fields (with defaults):
+      - linked:                        Whether this connector is linked to the search engine (default: true)
       - enabled:                      Whether this data store is active (default: true)
       - industry_vertical:            Industry vertical (default: "GENERIC")
       - content_config:               Content configuration (default: "CONTENT_REQUIRED")
@@ -365,6 +372,7 @@ variable "cloud_data_stores" {
 
   type = map(object({
     enabled                      = optional(bool, true)
+    linked                       = optional(bool, true)
     data_store_id                = string
     display_name                 = string
     industry_vertical            = optional(string, "GENERIC")

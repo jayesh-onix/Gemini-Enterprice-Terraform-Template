@@ -34,6 +34,7 @@ search_engine_display_name = "Gemini Enterprise (Production)"
 app_type                   = "APP_TYPE_INTRANET"
 search_tier                = "SEARCH_TIER_ENTERPRISE"
 search_add_ons             = ["SEARCH_ADD_ON_LLM"]
+data_store_ids              = []
 
 # -----------------------------------------------------------------------------
 # License — paid annual subscription for production
@@ -61,6 +62,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   jira = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "jira"
     collection_id           = "prod-jira-collection"
     collection_display_name = "Production Jira"
@@ -96,6 +98,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   confluence = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "confluence"
     collection_id           = "prod-confluence-collection"
     collection_display_name = "Production Confluence"
@@ -132,6 +135,7 @@ third_party_connectors = {
   # ---------------------------------------------------------------------------
   salesforce = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "salesforce"
     collection_id           = "prod-salesforce-collection"
     collection_display_name = "Production Salesforce"
@@ -161,8 +165,6 @@ third_party_connectors = {
       { entity_name = "case" },
       { entity_name = "task" }
     ]
-      { entity_name = "contentdocument" }
-    ]
 
     connector_modes   = ["DATA_INGESTION"]
     sync_mode         = "PERIODIC"
@@ -180,6 +182,7 @@ workspace_connectors = {
 
   gmail = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_mail"
     collection_id           = "prod-mail-collection"
     collection_display_name = "Production Gmail"
@@ -190,6 +193,7 @@ workspace_connectors = {
 
   calendar = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_calendar"
     collection_id           = "prod-calendar-collection"
     collection_display_name = "Production Calendar"
@@ -200,6 +204,7 @@ workspace_connectors = {
 
   drive = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_drive"
     collection_id           = "prod-drive-collection"
     collection_display_name = "Production Drive"
@@ -210,6 +215,7 @@ workspace_connectors = {
 
   sites = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "google_sites"
     collection_id           = "prod-sites-collection"
     collection_display_name = "Production Google Sites"
@@ -234,6 +240,7 @@ cloud_connectors = {
   # ---------------------------------------------------------------------------
   bigquery = {
     enabled                 = true
+    linked                  = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_source             = "bigquery"
     collection_id           = "prod-bigquery-collection"
     collection_display_name = "Production BigQuery"
@@ -264,6 +271,7 @@ cloud_data_stores = {
 
   announcements = {
     enabled           = true
+    linked            = true # Set to false to unlink the datastore from the Search Engine without destroying it
     data_store_id     = "prod-announcements-store"
     display_name      = "Production Announcements"
     industry_vertical = "GENERIC"

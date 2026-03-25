@@ -19,11 +19,13 @@ A production-ready, **generic and reusable** Terraform template for deploying Go
 
 | Principle | What It Means for You |
 |-----------|----------------------|
-| **Config-driven** | Enable/disable/configure any connector in `terraform.tfvars` — no code changes ever needed |
-| **No code duplication** | One generic `for_each` resource handles all connectors instead of one file per connector |
-| **Flexible secret names** | You choose your Secret Manager naming convention — nothing is hardcoded |
-| **Multi-environment ready** | Use `-var-file=environments/dev.tfvars` to manage dev, staging, and prod separately |
-| **Extensible** | Add a new connector type by adding one entry to the config map — nothing else changes |
+| **GCP-Native Optimization** | Built specifically for Google Cloud Platform to provide deep, seamless integration with Discovery Engine, Secret Manager, and IAM. |
+| **Config-driven** | Enable/disable/configure any connector in `terraform.tfvars` — no source code changes needed. |
+| **Multi-Instance Support** | Create any number of connectors (e.g., two different BigQuery datasets or Jira clouds) just by adding them to the config maps. |
+| **Granular Lifecycle (Linked)** | Use the `linked` flag to safely unlink data stores from the Search Engine without destroying the background sync process or the connector itself. |
+| **Flexible Secret Names** | You choose your Secret Manager naming convention — nothing is hardcoded to a specific project. |
+| **Multi-Environment Ready** | Use `-var-file=environments/dev.tfvars` to manage separate dev, staging, and prod configurations using the same codebase. |
+| **Extensible** | Add a new instance of any supported connector type by adding one entry to the config map. |
 
 ---
 

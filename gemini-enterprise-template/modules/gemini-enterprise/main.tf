@@ -75,7 +75,6 @@ resource "google_discovery_engine_search_engine" "main" {
     google_discovery_engine_data_connector.third_party,
     google_discovery_engine_data_connector.cloud,
     google_discovery_engine_data_connector.workspace,
-    google_discovery_engine_data_connector.cloud,
     google_discovery_engine_data_store.cloud,
     google_discovery_engine_license_config.main,
   ]
