@@ -55,7 +55,7 @@ variable "search_add_ons" {
 }
 
 variable "data_store_ids" {
-  description = "Explicit data store IDs (only used when no connectors are enabled)"
+  description = "Explicit list of data store IDs to link to the search engine. These are merged with any data stores managed by the connectors."
   type        = list(string)
   default     = []
 }

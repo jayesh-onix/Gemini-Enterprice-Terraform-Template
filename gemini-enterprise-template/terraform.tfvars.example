@@ -342,6 +342,16 @@ cloud_data_stores = {
 }
 
 # =============================================================================
+# EXTERNAL DATA STORES (Manual Linking)
+# =============================================================================
+# List of pre-existing Data Store IDs to link to the Search Engine.
+# Use this for data stores created manually in the Google Cloud Console
+# or via external automation that are NOT managed by this Terraform project.
+# =============================================================================
+
+data_store_ids = []
+
+# =============================================================================
 # ENGINE FEATURES
 # =============================================================================
 # Control engine-level features. These are NOT connectors — they're feature
