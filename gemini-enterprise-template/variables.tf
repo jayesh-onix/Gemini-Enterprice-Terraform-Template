@@ -22,12 +22,22 @@ variable "discovery_engine_location" {
   description = "Location for Discovery Engine resources (global, us, eu)"
   type        = string
   default     = "global"
+
+  validation {
+    condition     = contains(["global", "us", "eu"], var.discovery_engine_location)
+    error_message = "Location must be one of: global, us, eu."
+  }
 }
 
 variable "search_engine_id" {
   description = "Unique identifier for the Gemini Enterprise search engine"
   type        = string
   default     = "gemini-enterprise-app"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]*[a-z0-9]$", var.search_engine_id)) && length(var.search_engine_id) <= 63
+    error_message = "Search engine ID must start with a lowercase letter, contain only lowercase letters, numbers, and hyphens, end with a letter or number, and be at most 63 characters."
+  }
 }
 
 variable "search_engine_display_name" {
@@ -40,12 +50,22 @@ variable "app_type" {
   description = "Application type (APP_TYPE_INTRANET, APP_TYPE_INTERNET)"
   type        = string
   default     = "APP_TYPE_INTRANET"
+
+  validation {
+    condition     = contains(["APP_TYPE_UNSPECIFIED", "APP_TYPE_INTRANET", "APP_TYPE_INTERNET"], var.app_type)
+    error_message = "App type must be one of: APP_TYPE_UNSPECIFIED, APP_TYPE_INTRANET, APP_TYPE_INTERNET."
+  }
 }
 
 variable "search_tier" {
   description = "Search tier (SEARCH_TIER_STANDARD, SEARCH_TIER_ENTERPRISE)"
   type        = string
   default     = "SEARCH_TIER_ENTERPRISE"
+
+  validation {
+    condition     = contains(["SEARCH_TIER_STANDARD", "SEARCH_TIER_ENTERPRISE"], var.search_tier)
+    error_message = "Search tier must be one of: SEARCH_TIER_STANDARD, SEARCH_TIER_ENTERPRISE."
+  }
 }
 
 variable "search_add_ons" {
@@ -101,7 +121,7 @@ variable "start_date" {
     month = number
     day   = number
   })
-  default = { year = 2025, month = 1, day = 1 }
+  default = { year = 2026, month = 1, day = 1 }
 }
 
 variable "end_date" {
@@ -111,7 +131,7 @@ variable "end_date" {
     month = number
     day   = number
   })
-  default = { year = 2025, month = 12, day = 31 }
+  default = { year = 2026, month = 12, day = 31 }
 }
 
 # -----------------------------------------------------------------------------

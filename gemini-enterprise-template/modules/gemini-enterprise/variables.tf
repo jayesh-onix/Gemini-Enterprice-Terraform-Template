@@ -112,7 +112,7 @@ variable "start_date" {
     month = number
     day   = number
   })
-  default = { year = 2025, month = 1, day = 1 }
+  default = { year = 2026, month = 1, day = 1 }
 
   validation {
     condition     = var.start_date.month >= 1 && var.start_date.month <= 12 && var.start_date.day >= 1 && var.start_date.day <= 31
@@ -127,7 +127,7 @@ variable "end_date" {
     month = number
     day   = number
   })
-  default = { year = 2025, month = 12, day = 31 }
+  default = { year = 2026, month = 12, day = 31 }
 
   validation {
     condition     = var.end_date.month >= 1 && var.end_date.month <= 12 && var.end_date.day >= 1 && var.end_date.day <= 31

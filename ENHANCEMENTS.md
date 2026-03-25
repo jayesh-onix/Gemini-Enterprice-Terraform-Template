@@ -129,14 +129,12 @@ This made the Oanda template a **closed system** — extending it required a dev
 
 The Oanda project had a single `terraform.tfvars` with hardcoded values, and no `environments/` directory for managing dev vs. prod configurations. Every environment change required directly editing the single tfvars file, making it risky to switch between dev and prod without accidentally overwriting values.
 
-### 8. CI/CD Files Were Present but Oanda-Specific (Not Yet Genericized)
+### 8. CI/CD Files Were Present but Oanda-Specific
 
-The repo already included `.circleci/config.yml`, `atlantis.yaml`, and `.pre-commit-config.yaml` from commit 1 — but these files are **hardcoded for the Oanda project**:
+The repo already included `.circleci/config.yml`, `atlantis.yaml`, and `.pre-commit-config.yaml` from commit 1 — but these files are **hardcoded for the Oanda project** and are not part of the generic template project.
 
 - `.circleci/config.yml` uses `oandacorp/pre-commit@1` (Oanda's private CircleCI orb)
 - `atlantis.yaml` lists `oanda-dev-agentspace` as the project name and directory
-
-They were carried over as reference material. **Generic CI/CD workflows that work for any project (any team, any repo name, any directory) have not been implemented yet.** This is a known pending item.
 
 ### 9. No Widget Configuration
 
@@ -305,20 +303,16 @@ This means:
 
 The Oanda template had **no** `environments/` directory — every environment switch meant manually editing the single `terraform.tfvars` file, which was error-prone and left no clear audit trail of what each environment used.
 
-### Enhancement 7: CI/CD Files — Carried Over from Commit 1, Pending Genericization
+### Enhancement 7: CI/CD Files (Oanda-Specific Reference)
 
-> **Important clarification:** `.circleci/config.yml`, `atlantis.yaml`, and `.pre-commit-config.yaml` were **already present in the repo from commit 1** (the Oanda reference). They have **not** been genericized yet.
+> **Important clarification:** `.circleci/config.yml`, `atlantis.yaml`, and `.pre-commit-config.yaml` were **already present in the repo from commit 1** (the Oanda reference). They are **Oanda-specific** and are not involved in this generic template project.
 
 Current state of these files:
-- `.circleci/config.yml` — still references `oandacorp/pre-commit@1` (Oanda's private orb)
-- `atlantis.yaml` — still lists `oanda-dev-agentspace` as the project name and directory
-- `.pre-commit-config.yaml` — may be reusable as-is, but not verified
+- `.circleci/config.yml` — references `oandacorp/pre-commit@1` (Oanda's private orb)
+- `atlantis.yaml` — lists `oanda-dev-agentspace` as the project name and directory
+- `.pre-commit-config.yaml` — Oanda-specific configuration
 
-**These CI/CD files are pending work.** The goal is to update them into generic, reusable workflows that:
-- Work for any repo name, any directory, any team
-- Run `terraform fmt`, `terraform validate`, `terraform plan` on pull requests
-- Run `terraform apply` automatically on merge (via Atlantis)
-- Use a public/generic CircleCI orb instead of the Oanda-private one
+These files are NOT part of the generic template deliverables.
 
 ### Enhancement 8: Widget Configuration Included
 
@@ -343,10 +337,10 @@ This was completely absent in the Oanda template.
 
 ```hcl
 variable "start_date" {
-  default = { year = 2025, month = 1, day = 1 }
+  default = { year = 2026, month = 1, day = 1 }
 }
 variable "end_date" {
-  default = { year = 2025, month = 12, day = 31 }
+  default = { year = 2026, month = 12, day = 31 }
 }
 ```
 
@@ -438,21 +432,6 @@ No Terraform source files need to be edited. Enabling or disabling a connector i
 
 The `for_each` pattern eliminates all repetition. Adding a new entity to a connector means adding one line to the `entities` list — not writing a new resource block.
 
-### Goal 4: Best Strategy for 3rd-Party Connectors (Salesforce, Confluence, Jira)
-
-**Fully achieved with a pattern that is both correct and extensible.**
-
-The strategy is:
-1. **Structured map variable** (`third_party_connectors`) holds all OAuth connector config in `terraform.tfvars`
-2. **`locals.tf` flattening** normalizes the nested map into flat structures for clean `for_each` iteration
-3. **Secret Manager abstraction** — the `secrets` field in each connector entry maps logical names (like `client_id`) to actual Secret Manager secret IDs, and the template resolves them automatically
-4. **Automatic IAM binding** — the service identity is created once and granted access to all secrets across all connectors in a single batch
-5. **Data store ID computation** — `locals.tf` automatically computes data store IDs for all connectors and passes them to the search engine
-
-This approach means:
-- Salesforce, Confluence, and Jira are configured **identically** from the user's perspective — just different `data_source` values
-- A future connector (e.g., ServiceNow) needs **zero code changes** — just add an entry to `third_party_connectors` in `terraform.tfvars`
-
 ### Goal 5: Usable by Any Team — Not Tied to a Specific Project
 
 **Fully achieved.**
@@ -463,7 +442,7 @@ This approach means:
 - All other values have sensible defaults with full validation
 - `environments/` directory supports dev/staging/prod separation without duplicating code
 - `README.md` provides step-by-step guidance for any new user
-- **Note:** CI/CD files (`.circleci/`, `atlantis.yaml`) exist from commit 1 but are still Oanda-specific — generic CI/CD is pending
+- **Note:** CI/CD files (`.circleci/`, `atlantis.yaml`) exist from commit 1 but are Oanda-specific and NOT part of this generic project.
 
 ---
 
@@ -499,8 +478,8 @@ The new template does **not drop any functionality** from the Oanda reference. T
 | Multi-environment Support (`environments/`) | ❌ | ✅ (new) |
 | Configurable Secret Names | ❌ | ✅ (new) |
 | Multiple Instances per Connector Type | ❌ | ✅ (new) |
-| CI/CD files (CircleCI + Atlantis) | ✅ (Oanda-specific) | ⚠️ carried over, not yet genericized |
-| Pre-commit Hooks | ✅ (Oanda-specific) | ⚠️ carried over, not yet verified |
+| CI/CD files (CircleCI + Atlantis) | ✅ | ❌ (Oanda-specific) |
+| Pre-commit Hooks | ✅ | ❌ (Oanda-specific) |
 
 ---
 
@@ -547,9 +526,9 @@ gemini-enterprise-template/modules/gemini-enterprise/
 | `terraform.tfvars` | ✅ | ✅ | Generic template has full examples |
 | `terraform.tfvars.example` | ✅ | ✅ | |
 | `environments/` | ❌ | ✅ | New in generic template |
-| `.circleci/config.yml` | ✅ (Oanda-specific) | ⚠️ | Present from commit 1 — not yet genericized |
-| `atlantis.yaml` | ✅ (Oanda-specific) | ⚠️ | Present from commit 1 — not yet genericized |
-| `.pre-commit-config.yaml` | ✅ (Oanda-specific) | ⚠️ | Present from commit 1 — not yet verified |
+| `.circleci/config.yml` | ✅ | ❌ | Oanda-specific reference only |
+| `atlantis.yaml` | ✅ | ❌ | Oanda-specific reference only |
+| `.pre-commit-config.yaml` | ✅ | ❌ | Oanda-specific reference only |
 
 ---
 
